@@ -6,10 +6,13 @@ import traceback
 import json
 from datetime import datetime
 import diagnostics
+from dotenv import load_dotenv
 
+load_dotenv()
 
+app_name = os.getenv("APP_NAME")
 def setup_logger(
-    name="web_summarizer", log_file="web_summarizer.log", level=logging.INFO
+    name=app_name, log_file="phy_to_web.log", level=logging.INFO
 ):
     """
     Create a comprehensive logger with multiple handlers.
