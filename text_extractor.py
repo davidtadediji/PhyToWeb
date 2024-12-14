@@ -79,6 +79,8 @@ def ensure_bucket_exists():
     """
     Checks if the specified S3 bucket exists. If not, creates it.
     """
+
+    # TODO: Fix bug with creating new bucket if not exists
     try:
         s3.head_bucket(Bucket=bucket_name)
         print(f'Bucket "{bucket_name}" already exists.')

@@ -45,6 +45,8 @@ class JsonSchemaStrategy(ResponseFormatStrategy):
 
 # Pydantic Model Strategy
 class PydanticModelStrategy(ResponseFormatStrategy):
+    # TODO: Fix bug with pydantic strategy datetime formatting
+
     def __init__(self, pydantic_model: BaseModel):
         self.pydantic_model = pydantic_model
 
