@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
+from s3_facade import s3
+
+from logger import configured_logger
 
 load_dotenv()
 
@@ -33,9 +36,20 @@ class JsonSchemaStrategy(ResponseFormatStrategy):
         self.schema_file = schema_file
 
     def prepare_llm(self, llm: ChatOpenAI):
-        with open(self.schema_file, "r") as f:
-            json_schema = json.load(f)
-        return llm.with_structured_output(json_schema)
+        try:
+            # Download schema from S3
+            schema_content = s3.download_schema(self.schema_file)
+
+            # Assuming the schema content is JSON, you can load it into a Python object
+            json_schema = json.loads(schema_content.decode('utf-8'))  # Decode bytes to string if necessary
+
+            # Configure the LLM with the schema
+            return llm.with_structured_output(json_schema)
+
+        except Exception as e:
+            # Handle any errors (e.g., downloading the schema, parsing JSON)
+            configured_logger.error(f"Error preparing LLM with schema '{self.schema_file}': {e}")
+            raise Exception(f"Failed to prepare LLM with schema '{self.schema_file}'.") from e
 
     def serialize_response(self, response):
         # JSON Schema responses should already be JSON-compatible
@@ -85,10 +99,13 @@ class LLMClient:
         return self.strategy.serialize_response(response)
 
 
-def process_form_data(use_pydantic: bool = False, input_content: str = None):
+def process_form_data(
+    form_schema_key: str = None, use_pydantic: bool = False, input_content: str = None
+):
     """
     Process form data using LLM with either Pydantic or JSON Schema strategy.
 
+    :param form_schema_key: String serves as key for schema file in s3
     :param use_pydantic: Boolean to choose between Pydantic and JSON Schema strategy
     :param input_content: Input content for form processing
     :return: Processed form data as a JSON string
@@ -96,7 +113,9 @@ def process_form_data(use_pydantic: bool = False, input_content: str = None):
     """
     # Validate input content
     if input_content is None:
-        raise ValueError("Input content must be provided. input_content cannot be None.")
+        raise ValueError(
+            "Input content must be provided. input_content cannot be None."
+        )
 
     # Static Case Details
     static_case_details = {
@@ -115,7 +134,7 @@ def process_form_data(use_pydantic: bool = False, input_content: str = None):
     if use_pydantic:
         strategy = PydanticModelStrategy(FormDataSchema)
     else:
-        strategy = JsonSchemaStrategy("schema.json")
+        strategy = JsonSchemaStrategy(form_schema_key)
 
     # Initialize LLM client with the chosen strategy
     llm_client = LLMClient(model="gpt-4o-mini", strategy=strategy)
@@ -124,10 +143,12 @@ def process_form_data(use_pydantic: bool = False, input_content: str = None):
     llm_client.prepare_llm()
 
     # Send messages
-    response = llm_client.invoke([
-        SystemMessage(content="Extract the form data."),
-        HumanMessage(content=input_content)
-    ])
+    response = llm_client.invoke(
+        [
+            SystemMessage(content="Extract the form data."),
+            HumanMessage(content=input_content),
+        ]
+    )
 
     # Convert response to JSON string
     return response

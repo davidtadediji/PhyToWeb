@@ -4,7 +4,7 @@ import uuid
 from dotenv import load_dotenv
 from logger import configured_logger
 from botocore.exceptions import NoCredentialsError, ClientError
-from file_upload import upload_file
+from s3_facade import s3
 
 # Load environment variables from .env
 load_dotenv()
@@ -13,7 +13,7 @@ load_dotenv()
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_REGION")
-bucket_name = os.getenv("S3_BUCKET")
+bucket_name = os.getenv("S3_FORM_BUCKET")
 
 # Initialize Textract client
 textract = boto3.client(
@@ -221,9 +221,9 @@ def text_extractor_enhanced(s3_file_name: str) -> dict:
 
 
 # Example usage
-if __name__ == "__main__":
-    with open("case_registration_form.pdf", "rb") as f:
-        # TODO: Collect case_id, case_type and timestamp and use for
-        file_content = f.read()
-        upload_file(file_content, "case_registration_form.pdf")
-        result = text_extractor_enhanced("case_registration_form.pdf")
+# if __name__ == "__main__":
+#     with open("case_registration_form.pdf", "rb") as f:
+#         # TODO: Collect case_id, case_type and timestamp and use for
+#         file_content = f.read()
+#         s3.upload_file(file_content, "case_registration_form.pdf")
+#         result = text_extractor_enhanced("case_registration_form.pdf")

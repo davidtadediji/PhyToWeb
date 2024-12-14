@@ -34,7 +34,7 @@ class Organisation(BaseModel):
     testField: Optional[str]
 
 
-class Addres(BaseModel):
+class Address(BaseModel):
     tempId: str
     address1: str
     address2: Optional[str]
@@ -95,7 +95,7 @@ class FinancialInformation(BaseModel):
 class FormDataSchema(BaseModel):
     CaseDetails: CaseDetails
     Organisation: Organisation
-    Address: List[Addres]
+    Address: List[Address]
     Identifier: List[IdentifierItem]
     Contact: List[ContactItem]
     ContactPerson: List[ContactPersonItem]

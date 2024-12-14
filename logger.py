@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app_name = os.getenv("APP_NAME")
-def setup_logger(
-    name=app_name, log_file="phy_to_web.log", level=logging.INFO
-):
+
+
+def setup_logger(name=app_name, log_file="phy_to_web.log", level=logging.INFO):
     """
     Create a comprehensive logger with multiple handlers.
 

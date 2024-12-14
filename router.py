@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 
-from file_upload import upload_file
+from s3_facade import s3
 from main import process_form_data
 from text_extractor import text_extractor_enhanced
 
@@ -21,29 +21,36 @@ router = APIRouter(
 
 # Define a Pydantic model for the additional fields
 class FormMetadata:
-    def __init__(self, form_id: str, case_type: str, case_sub_type: str, user_id: str, timestamp: str = None):
-        self.form_id = form_id
+    def __init__(
+        self,
+        form_schema_key: str,
+        case_type: str,
+        case_sub_type: str,
+        user_id: str,
+        timestamp: str = None,
+    ):
+        self.form_schema_key = form_schema_key
         self.case_type = case_type
         self.case_sub_type = case_sub_type
         self.user_id = user_id
-        self.timestamp = timestamp or datetime.utcnow().isoformat()
+        self.timestamp = timestamp or datetime.now(datetime.UTC)
 
 
 @router.post("/extract/", response_class=JSONResponse)
 async def extract_form_data(
-        file: UploadFile = File(...),
-        form_id: str = Form(...),
-        case_type: str = Form(...),
-        case_sub_type: str = Form(...),
-        user_id: str = Form(...),
-        timestamp: str = Form(None),
+    file: UploadFile = File(...),
+    form_schema_key: str = Form(...),
+    case_type: str = Form(...),
+    case_sub_type: str = Form(...),
+    user_id: str = Form(...),
+    timestamp: str = Form(None),
 ):
     """
     Extract form data from the uploaded file using AWS Textract.
 
     Args:
         file (UploadFile): The uploaded file containing form data.
-        form_id (str): Form ID.
+        form_schema_key (str): Form Schema Key.
         case_type (str): Type of case.
         case_sub_type (str): Subtype of case.
         user_id (str): User ID.
@@ -54,30 +61,35 @@ async def extract_form_data(
     """
     try:
         # Create a FormMetadata object with the provided data
-        metadata = FormMetadata(form_id=form_id, case_type=case_type, case_sub_type=case_sub_type, user_id=user_id,
-                                timestamp=timestamp)
+        metadata = FormMetadata(
+            form_schema_key=form_schema_key,
+            case_type=case_type,
+            case_sub_type=case_sub_type,
+            user_id=user_id,
+            timestamp=timestamp,
+        )
 
         # Construct a unique filename
         original_filename = file.filename
         file_extension = os.path.splitext(original_filename)[1]
         constructed_filename = (
-            f"{os.path.splitext(original_filename)[0]}_{metadata.timestamp}_{metadata.user_id}_"
-            f"{metadata.case_type}_{metadata.case_sub_type}{file_extension}"
+            f"{metadata.case_type}_{metadata.case_sub_type}_{metadata.user_id}_{metadata.timestamp}"
+            f"{file_extension}"
         )
         file_content = await file.read()
 
-        upload_file(file_content, constructed_filename)
+        s3.upload_pdf_form(file_content=file_content, file_name=constructed_filename)
 
-        form_text_data = text_extractor_enhanced("case_registration_form.pdf")
+        form_text_data = text_extractor_enhanced(constructed_filename)
 
         # Debug: Log the Textract response
         print("Textract Response:", form_text_data)
 
-        result  = process_form_data(input_content=str(form_text_data))
+        result = process_form_data(form_schema_key=form_schema_key, input_content=str(form_text_data))
 
         # Compile the response data
         response_data = {
-            "form_id": metadata.form_id,
+            "form_schema_key": metadata.form_schema_key,
             "case_type": metadata.case_type,
             "case_sub_type": metadata.case_sub_type,
             "user_id": metadata.user_id,
