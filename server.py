@@ -14,6 +14,8 @@ from logger import configured_logger
 import os
 
 app_name = os.getenv("APP_NAME")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configured_logger.info(f"Starting {app_name} Service...")

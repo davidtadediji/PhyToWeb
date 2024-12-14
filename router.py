@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 # Initialize boto3 Textract client
-textract = boto3.client('textract')
+textract = boto3.client("textract")
 
 
 @router.post("/extract/", response_class=JSONResponse)
@@ -35,10 +35,9 @@ async def extract_form_data(file: UploadFile = File(...)):
             f.write(await file.read())
 
         # Call AWS Textract to analyze the document
-        with open(file_location, 'rb') as document:
+        with open(file_location, "rb") as document:
             response = textract.analyze_document(
-                Document={'Bytes': document.read()},
-                FeatureTypes=['TABLES', 'FORMS']
+                Document={"Bytes": document.read()}, FeatureTypes=["TABLES", "FORMS"]
             )
 
         # Debug: Log the Textract response
