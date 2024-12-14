@@ -6,6 +6,7 @@ from fastapi import APIRouter, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 
 from file_upload import upload_file
+from main import process_form_data
 from text_extractor import text_extractor_enhanced
 
 load_dotenv()
@@ -67,10 +68,12 @@ async def extract_form_data(
 
         upload_file(file_content, constructed_filename)
 
-        result = text_extractor_enhanced("case_registration_form.pdf")
+        form_text_data = text_extractor_enhanced("case_registration_form.pdf")
 
         # Debug: Log the Textract response
-        print("Textract Response:", result)
+        print("Textract Response:", form_text_data)
+
+        result  = process_form_data(input_content=str(form_text_data))
 
         # Compile the response data
         response_data = {
@@ -79,7 +82,8 @@ async def extract_form_data(
             "case_sub_type": metadata.case_sub_type,
             "user_id": metadata.user_id,
             "timestamp": metadata.timestamp,
-            "extracted_data": result,
+            "form_text_data": form_text_data,
+            "extracted_form_data": result,
         }
 
         # Return the response data

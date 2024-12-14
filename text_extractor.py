@@ -192,13 +192,13 @@ def text_extractor_enhanced(s3_file_name: str) -> dict:
 
         # Extract different types of information
         extracted_data = {
-            "raw_text": {
-                "words": extract_text_enhanced(response, "WORD"),
-                "lines": extract_text_enhanced(response, "LINE"),
-            },
+            # "raw_text": {
+            #     # "words": extract_text_enhanced(response, "WORD"),
+            # },
+            "lines": extract_text_enhanced(response, "LINE"),
             "tables": extract_tables(response, word_map),
             "form_fields": extract_form_fields_advanced(response, word_map),
-            "raw_response": response,
+            # "raw_response": response,
         }
 
         # Logging and printing extracted information

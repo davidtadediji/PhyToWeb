@@ -11,9 +11,8 @@ load_dotenv()
 # Load API key from environment variables
 api_key = os.getenv("OPENAI_API_KEY")
 
-print(api_key)
-
 from models import FormDataSchema
+
 
 # Strategy Interface
 class ResponseFormatStrategy(ABC):
@@ -27,8 +26,6 @@ class ResponseFormatStrategy(ABC):
         """Serialize the LLM response based on the chosen strategy."""
         pass
 
-
-# TODO: Incorporate database for different form data schemas
 
 # JSON Schema Strategy
 class JsonSchemaStrategy(ResponseFormatStrategy):
@@ -47,8 +44,6 @@ class JsonSchemaStrategy(ResponseFormatStrategy):
 
 # Pydantic Model Strategy
 class PydanticModelStrategy(ResponseFormatStrategy):
-    # TODO: Fix bug with pydantic strategy datetime formatting
-
     def __init__(self, pydantic_model: BaseModel):
         self.pydantic_model = pydantic_model
 
@@ -90,80 +85,62 @@ class LLMClient:
         return self.strategy.serialize_response(response)
 
 
-# Static CaseDetails
-static_case_details = {
-    "ocdCaseTypeId": "REGISTRATION",
-    "ocdCaseSubTypeId": "REGISTRATION_OF_NGO",
-    "ocdWorkflowId": "WORKFLOW_4984513156789455123",
-    "ocdAssignerId": "usr_5224442c22335w651",
-    "ocdAssignedDate": "2024-10-07T00:00:00",
-    "ocdAssigneeId": "usr_5224442c223354651",
-    "ocdStatusId": "STATUS_4984513156789455123",
-    "ocdActionId": "ACTION_4984513156789455123",
-    "ocdIsEditable": False,
-}
+def process_form_data(use_pydantic: bool = False, input_content: str = None):
+    """
+    Process form data using LLM with either Pydantic or JSON Schema strategy.
 
-# Choose a strategy: JSON Schema or Pydantic Model
+    :param use_pydantic: Boolean to choose between Pydantic and JSON Schema strategy
+    :param input_content: Input content for form processing
+    :return: Processed form data as a JSON string
+    :raises ValueError: If input_content is None
+    """
+    # Validate input content
+    if input_content is None:
+        raise ValueError("Input content must be provided. input_content cannot be None.")
 
-use_pydantic = input("Use pydantic, y/n?")  # Set as False to use JSON schema strategy
+    # Static Case Details
+    static_case_details = {
+        "ocdCaseTypeId": "REGISTRATION",
+        "ocdCaseSubTypeId": "REGISTRATION_OF_NGO",
+        "ocdWorkflowId": "WORKFLOW_4984513156789455123",
+        "ocdAssignerId": "usr_5224442c22335w651",
+        "ocdAssignedDate": "2024-10-07T00:00:00",
+        "ocdAssigneeId": "usr_5224442c223354651",
+        "ocdStatusId": "STATUS_4984513156789455123",
+        "ocdActionId": "ACTION_4984513156789455123",
+        "ocdIsEditable": False,
+    }
 
-if use_pydantic == "y":
-    use_pydantic = True
-else:
-    use_pydantic = False
+    # Choose strategy based on input
+    if use_pydantic:
+        strategy = PydanticModelStrategy(FormDataSchema)
+    else:
+        strategy = JsonSchemaStrategy("schema.json")
 
-if use_pydantic:
-    strategy = PydanticModelStrategy(FormDataSchema)
-else:
-    strategy = JsonSchemaStrategy("schema.json")
+    # Initialize LLM client with the chosen strategy
+    llm_client = LLMClient(model="gpt-4o-mini", strategy=strategy)
 
-# Initialize LLM client with the chosen strategy
-llm_client = LLMClient(model="gpt-4o-mini", strategy=strategy)
+    # Prepare the LLM with the chosen strategy
+    llm_client.prepare_llm()
 
-# Prepare the LLM with the chosen strategy
-llm_client.prepare_llm()
-
-# Send messages
-response = llm_client.invoke(
-    [
+    # Send messages
+    response = llm_client.invoke([
         SystemMessage(content="Extract the form data."),
-        HumanMessage(
-            content=(
-                "Static Case Details:\n"
-                f"{json.dumps(static_case_details, indent=4)}\n\n"
-                "Organisation Name: Global Innovations\n"
-                "Contact Value: john.doe@company.com\n"
-                "Editable: False\n"
-                "Mission: To change the world.\n"
-                "Case Type: REGISTRATION\n"
-                "Account Type: Corporate Expenses\n"
-                "Vision: To dominate the future.\n"
-                "Contact Type: Email\n"
-                "Postal Code: 90210\n"
-                "Contact Person: Jane Smith\n"
-                "Address 1: Somewhere in the city\n"
-                "Amount: 50000\n"
-                "Assignee ID: usr_5224442c223354651\n"
-                "Identifier: Some ID Number\n"
-                "Assigner ID: usr_5224442c22335w651\n"
-                "Country: USA\n"
-                "Organisation Type: Tech\n"
-                "Organisation: Global Innovations\n"
-                "Case Sub-Type: REGISTRATION_OF_NGO\n"
-                "Role: Main Contact\n"
-                "Logo URL: https://www.globalinnovations.com/logo.png\n"
-                "Status: STATUS_4984513156789455123\n"
-                "Issued By: Government Body\n"
-                "Action: ACTION_4984513156789455123\n"
-                "Assigned Date: 2024-10-07T00:00:00\n"
-                "Acronym: GII\n"
-                "Address 2: Street Name\n"
-                "Objectives: Leading the market."
-            )
-        ),
-    ]
-)
+        HumanMessage(content=input_content)
+    ])
+
+    # Convert response to JSON string
+    return response
 
 
-# Print serialized response
-print(json.dumps(response, indent=4))
+# Example usage
+# if __name__ == "__main__":
+#     # Use Pydantic strategy
+#     pydantic_response = process_form_data(use_pydantic=True)
+#     print("Pydantic Response:")
+#     print(json.dumps(pydantic_response, indent=4))
+#
+#     # Use JSON Schema strategy
+#     json_schema_response = process_form_data(use_pydantic=False)
+#     print("\nJSON Schema Response:")
+#     print(json.dumps(json_schema_response, indent=4))
