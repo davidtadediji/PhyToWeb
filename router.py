@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, File, UploadFile, Form
@@ -33,7 +33,7 @@ class FormMetadata:
         self.case_type = case_type
         self.case_sub_type = case_sub_type
         self.user_id = user_id
-        self.timestamp = timestamp or datetime.now(datetime.UTC)
+        self.timestamp = timestamp or datetime.now(timezone.utc)
 
 
 @router.post("/extract/", response_class=JSONResponse)

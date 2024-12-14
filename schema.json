@@ -1,45 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "form_data_schema",
-  "description": "Form Data Schema",
   "type": "object",
   "properties": {
     "CaseDetails": {
       "type": "object",
       "properties": {
-        "ocdCaseTypeId": {
-          "type": "string"
-        },
-        "ocdCaseSubTypeId": {
-          "type": "string"
-        },
-        "ocdWorkflowId": {
-          "type": "string"
-        },
-        "ocdAssignerId": {
-          "type": "string"
-        },
-        "ocdAssignedDate": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "ocdAssigneeId": {
-          "type": "string"
-        },
-        "ocdStatusId": {
-          "type": "string"
-        },
-        "ocdActionId": {
-          "type": "string"
-        },
-        "ocdIsEditable": {
-          "type": "boolean"
-        }
+        "ocdCaseTypeId": { "type": "string" },
+        "ocdCaseSubTypeId": { "type": "string" },
+        "ocdWorkflowId": { "type": "string" },
+        "ocdAssignerId": { "type": "string" },
+        "ocdAssignedDate": { "type": "string", "format": "date-time" },
+        "ocdAssigneeId": { "type": "string" },
+        "ocdStatusId": { "type": "string" },
+        "ocdActionId": { "type": "string" },
+        "ocdIsEditable": { "type": "boolean" }
       },
       "required": [
         "ocdCaseTypeId",
         "ocdCaseSubTypeId",
-        "ocdWorkflowId",
         "ocdAssignerId",
         "ocdAssignedDate",
         "ocdAssigneeId",
@@ -48,45 +26,27 @@
         "ocdIsEditable"
       ]
     },
-    "Organisation": {
+    "Product": {
       "type": "object",
       "properties": {
-        "tempId": {
-          "type": "string"
-        },
-        "organisationName": {
-          "type": "string"
-        },
-        "acronym": {
-          "type": "string"
-        },
-        "organisationType": {
-          "type": "string"
-        },
-        "mission": {
-          "type": "string"
-        },
-        "objectives": {
-          "type": "string"
-        },
-        "vision": {
-          "type": "string"
-        },
-        "logo": {
-          "type": "string",
-          "format": "uri"
-        },
-        "testField": {
-          "type": "string"
-        }
+        "tempId": { "type": "string" },
+        "productName": { "type": "string" },
+        "version": { "type": "string" },
+        "productType": { "type": "string" },
+        "launchDate": { "type": "string", "format": "date" },
+        "category": { "type": "string" },
+        "website": { "type": "string", "format": "uri" },
+        "productDescription": { "type": "string" },
+        "logo": { "type": "string", "format": "uri" }
       },
       "required": [
-        "tempId",
-        "organisationName",
-        "organisationType",
-        "mission",
-        "objectives",
-        "vision",
+        "productName",
+        "version",
+        "productType",
+        "launchDate",
+        "category",
+        "website",
+        "productDescription",
         "logo"
       ]
     },
@@ -95,38 +55,16 @@
       "items": {
         "type": "object",
         "properties": {
-          "tempId": {
-            "type": "string"
-          },
-          "address1": {
-            "type": "string"
-          },
-          "address2": {
-            "type": "string"
-          },
-          "address3": {
-            "type": "string"
-          },
-          "addressType": {
-            "type": "string"
-          },
-          "country": {
-            "type": "string"
-          },
-          "postalCode": {
-            "type": "string"
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "tempId": { "type": "string" },
+          "address1": { "type": "string" },
+          "address2": { "type": "string" },
+          "addressType": { "type": "string" },
+          "country": { "type": "string" },
+          "postalCode": { "type": "string" },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" }
         },
         "required": [
-          "tempId",
           "address1",
           "addressType",
           "country",
@@ -136,66 +74,17 @@
         ]
       }
     },
-    "Identifier": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "tempId": {
-            "type": "string"
-          },
-          "identifierValue": {
-            "type": "string"
-          },
-          "issueDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "expiryDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "identifierType": {
-            "type": "string"
-          },
-          "issuedBy": {
-            "type": "string"
-          },
-          "organisation": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "tempId",
-          "identifierValue",
-          "issueDate",
-          "expiryDate",
-          "identifierType",
-          "issuedBy",
-          "organisation"
-        ]
-      }
-    },
     "Contact": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "tempId": {
-            "type": "string"
-          },
-          "contactType": {
-            "type": "string"
-          },
-          "contactValue": {
-            "type": "string"
-          },
-          "isPrimary": {
-            "type": "boolean"
-          }
+          "tempId": { "type": "string" },
+          "contactType": { "type": "string" },
+          "contactValue": { "type": "string" },
+          "isPrimary": { "type": "boolean" }
         },
         "required": [
-          "tempId",
           "contactType",
           "contactValue",
           "isPrimary"
@@ -207,33 +96,15 @@
       "items": {
         "type": "object",
         "properties": {
-          "tempId": {
-            "type": "string"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "lastName": {
-            "type": "string"
-          },
-          "assignedPerson": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
-          },
-          "organisation": {
-            "type": "string"
-          },
-          "role": {
-            "type": "string"
-          },
-          "role1": {
-            "type": "string"
-          }
+          "tempId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "assignedPerson": { "type": "string" },
+          "address": { "type": "string" },
+          "organisation": { "type": "string" },
+          "role": { "type": "string" }
         },
         "required": [
-          "tempId",
           "firstName",
           "lastName",
           "assignedPerson",
@@ -243,72 +114,19 @@
         ]
       }
     },
-    "Activity": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "tempId": {
-            "type": "string"
-          },
-          "activityName": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "description": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "tempId",
-          "activityName",
-          "type",
-          "startDate",
-          "endDate",
-          "description"
-        ]
-      }
-    },
     "FinancialInformation": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "tempId": {
-            "type": "string"
-          },
-          "dateFrom": {
-            "type": "string",
-            "format": "date"
-          },
-          "dateTo": {
-            "type": "string",
-            "format": "date"
-          },
-          "accountType": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "number"
-          },
-          "address": {
-            "type": "string"
-          }
+          "tempId": { "type": "string" },
+          "dateFrom": { "type": "string", "format": "date" },
+          "dateTo": { "type": "string", "format": "date" },
+          "accountType": { "type": "string" },
+          "amount": { "type": "number" },
+          "address": { "type": "string" }
         },
         "required": [
-          "tempId",
-          "dateFrom",
-          "dateTo",
           "accountType",
           "amount",
           "address"
@@ -318,12 +136,10 @@
   },
   "required": [
     "CaseDetails",
-    "Organisation",
+    "Product",
     "Address",
-    "Identifier",
     "Contact",
     "ContactPerson",
-    "Activity",
     "FinancialInformation"
   ]
 }

@@ -136,3 +136,4 @@ class S3Facade:
 
 
 s3 = S3Facade()
+s3.upload_schema("software_launch.json")
