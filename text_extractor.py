@@ -1,6 +1,7 @@
 import boto3
 import os
 import uuid
+import time
 from dotenv import load_dotenv
 from logger import configured_logger
 from botocore.exceptions import NoCredentialsError, ClientError
@@ -170,6 +171,59 @@ def extract_form_fields_advanced(response, word_map):
     return final_map
 
 
+def start_async_textract_analysis(s3_file_name: str) -> str:
+    """
+    Start an asynchronous Textract document analysis job.
+
+    Args:
+        s3_file_name (str): The S3 file name (path) of the document to analyze.
+
+    Returns:
+        str: Job ID to track the status of the analysis.
+    """
+    try:
+        response = textract.start_document_analysis(
+            DocumentLocation={
+                "S3Object": {"Bucket": bucket_name, "Name": s3_file_name}
+            },
+            FeatureTypes=["FORMS", "TABLES"],
+        )
+        return response["JobId"]
+    except (NoCredentialsError, ClientError) as e:
+        configured_logger.error(f"Textract error: {e}")
+        raise Exception("Could not start Textract analysis.") from e
+
+
+def get_async_textract_results(job_id: str) -> dict:
+    """
+    Retrieve the results of the asynchronous Textract document analysis.
+
+    Args:
+        job_id (str): The Job ID of the Textract analysis.
+
+    Returns:
+        dict: Textract analysis result.
+    """
+    try:
+        while True:
+            result = textract.get_document_analysis(JobId=job_id)
+            status = result["JobStatus"]
+
+            if status == "SUCCEEDED":
+                print("Textract job succeeded.")
+                return result
+            elif status == "FAILED":
+                print("Textract job failed.")
+                raise Exception("Textract analysis failed.")
+
+            print("Waiting for job to complete...")
+            time.sleep(5)  # Sleep for 5 seconds before checking again
+
+    except (NoCredentialsError, ClientError) as e:
+        configured_logger.error(f"Textract error: {e}")
+        raise Exception("Error fetching Textract results.") from e
+
+
 def text_extractor_enhanced(s3_file_name: str) -> dict:
     """
     Enhanced text extraction using AWS Textract with comprehensive parsing.
@@ -181,24 +235,20 @@ def text_extractor_enhanced(s3_file_name: str) -> dict:
         dict: Comprehensive extraction results
     """
     try:
-        # Analyze document with FORMS and TABLES feature types
-        response = textract.analyze_document(
-            Document={"S3Object": {"Bucket": bucket_name, "Name": s3_file_name}},
-            FeatureTypes=["FORMS", "TABLES"],
-        )
+        # Start the asynchronous Textract analysis
+        job_id = start_async_textract_analysis(s3_file_name)
+
+        # Get the results once the job is complete
+        response = get_async_textract_results(job_id)
 
         # Mapping of word IDs to their text/status
         word_map = map_word_ids(response)
 
         # Extract different types of information
         extracted_data = {
-            # "raw_text": {
-            #     # "words": extract_text_enhanced(response, "WORD"),
-            # },
-            "lines": extract_text_enhanced(response, "LINE"),
             "tables": extract_tables(response, word_map),
             "form_fields": extract_form_fields_advanced(response, word_map),
-            # "raw_response": response,
+            "lines": extract_text_enhanced(response, "LINE"),
         }
 
         # Logging and printing extracted information
@@ -222,8 +272,4 @@ def text_extractor_enhanced(s3_file_name: str) -> dict:
 
 # Example usage
 # if __name__ == "__main__":
-#     with open("case_registration_form.pdf", "rb") as f:
-#         # TODO: Collect case_id, case_type and timestamp and use for
-#         file_content = f.read()
-#         s3.upload_file(file_content, "case_registration_form.pdf")
-#         result = text_extractor_enhanced("case_registration_form.pdf")
+#     result = text_extractor_enhanced("case_registration_form.pdf")

@@ -1,19 +1,40 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
+  "title": "form_data_schema",
+  "description": "Form Data Schema",
   "properties": {
     "CaseDetails": {
       "type": "object",
       "properties": {
-        "ocdCaseTypeId": { "type": "string" },
-        "ocdCaseSubTypeId": { "type": "string" },
-        "ocdWorkflowId": { "type": "string" },
-        "ocdAssignerId": { "type": "string" },
-        "ocdAssignedDate": { "type": "string", "format": "date-time" },
-        "ocdAssigneeId": { "type": "string" },
-        "ocdStatusId": { "type": "string" },
-        "ocdActionId": { "type": "string" },
-        "ocdIsEditable": { "type": "boolean" }
+        "ocdCaseTypeId": {
+          "type": "string"
+        },
+        "ocdCaseSubTypeId": {
+          "type": "string"
+        },
+        "ocdWorkflowId": {
+          "type": "string"
+        },
+        "ocdAssignerId": {
+          "type": "string"
+        },
+        "ocdAssignedDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ocdAssigneeId": {
+          "type": "string"
+        },
+        "ocdStatusId": {
+          "type": "string"
+        },
+        "ocdActionId": {
+          "type": "string"
+        },
+        "ocdIsEditable": {
+          "type": "boolean"
+        }
       },
       "required": [
         "ocdCaseTypeId",
@@ -29,15 +50,36 @@
     "Product": {
       "type": "object",
       "properties": {
-        "tempId": { "type": "string" },
-        "productName": { "type": "string" },
-        "version": { "type": "string" },
-        "productType": { "type": "string" },
-        "launchDate": { "type": "string", "format": "date" },
-        "category": { "type": "string" },
-        "website": { "type": "string", "format": "uri" },
-        "productDescription": { "type": "string" },
-        "logo": { "type": "string", "format": "uri" }
+        "tempId": {
+          "type": "string"
+        },
+        "productName": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "productType": {
+          "type": "string"
+        },
+        "launchDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "category": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string",
+          "format": "uri"
+        },
+        "productDescription": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri"
+        }
       },
       "required": [
         "productName",
@@ -55,14 +97,32 @@
       "items": {
         "type": "object",
         "properties": {
-          "tempId": { "type": "string" },
-          "address1": { "type": "string" },
-          "address2": { "type": "string" },
-          "addressType": { "type": "string" },
-          "country": { "type": "string" },
-          "postalCode": { "type": "string" },
-          "startDate": { "type": "string", "format": "date-time" },
-          "endDate": { "type": "string", "format": "date-time" }
+          "tempId": {
+            "type": "string"
+          },
+          "address1": {
+            "type": "string"
+          },
+          "address2": {
+            "type": "string"
+          },
+          "addressType": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
         "required": [
           "address1",
@@ -79,10 +139,18 @@
       "items": {
         "type": "object",
         "properties": {
-          "tempId": { "type": "string" },
-          "contactType": { "type": "string" },
-          "contactValue": { "type": "string" },
-          "isPrimary": { "type": "boolean" }
+          "tempId": {
+            "type": "string"
+          },
+          "contactType": {
+            "type": "string"
+          },
+          "contactValue": {
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          }
         },
         "required": [
           "contactType",
@@ -96,13 +164,27 @@
       "items": {
         "type": "object",
         "properties": {
-          "tempId": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "assignedPerson": { "type": "string" },
-          "address": { "type": "string" },
-          "organisation": { "type": "string" },
-          "role": { "type": "string" }
+          "tempId": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "assignedPerson": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "organisation": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
         },
         "required": [
           "firstName",
@@ -119,12 +201,26 @@
       "items": {
         "type": "object",
         "properties": {
-          "tempId": { "type": "string" },
-          "dateFrom": { "type": "string", "format": "date" },
-          "dateTo": { "type": "string", "format": "date" },
-          "accountType": { "type": "string" },
-          "amount": { "type": "number" },
-          "address": { "type": "string" }
+          "tempId": {
+            "type": "string"
+          },
+          "dateFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dateTo": {
+            "type": "string",
+            "format": "date"
+          },
+          "accountType": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "address": {
+            "type": "string"
+          }
         },
         "required": [
           "accountType",

@@ -25,8 +25,17 @@ class S3Facade:
         self.data_schema_bucket_name = os.getenv("S3_DATA_SCHEMA_BUCKET")
 
         # Add additional validation
-        if not all([self.aws_access_key_id, self.aws_secret_access_key, self.aws_region, self.form_pdf_bucket_name]):
-            raise ValueError("Missing required AWS configuration. Check your environment variables.")
+        if not all(
+            [
+                self.aws_access_key_id,
+                self.aws_secret_access_key,
+                self.aws_region,
+                self.form_pdf_bucket_name,
+            ]
+        ):
+            raise ValueError(
+                "Missing required AWS configuration. Check your environment variables."
+            )
 
         self.s3 = boto3.client(
             "s3",
@@ -48,7 +57,9 @@ class S3Facade:
         """
         # Add extensive logging and validation
         configured_logger.info(f"Attempting to upload file: {file_name}")
-        configured_logger.info(f"Bucket name from environment: '{self.form_pdf_bucket_name}'")
+        configured_logger.info(
+            f"Bucket name from environment: '{self.form_pdf_bucket_name}'"
+        )
         configured_logger.info(f"AWS Access Key ID: '{bool(self.aws_access_key_id)}'")
         configured_logger.info(f"AWS Region: '{self.aws_region}'")
 
@@ -68,16 +79,19 @@ class S3Facade:
             self.s3.put_object(
                 Bucket=str(self.form_pdf_bucket_name),  # Ensure it's a string
                 Key=file_name,
-                Body=file_content
+                Body=file_content,
             )
 
             file_url = f"https://{self.form_pdf_bucket_name}.s3.{self.aws_region}.amazonaws.com/{file_name}"
             configured_logger.debug(f"File uploaded to S3: {file_url}")
             return file_url
         except Exception as e:
-            configured_logger.error(f"Detailed S3 upload error for {file_name}: {type(e).__name__} - {str(e)}")
+            configured_logger.error(
+                f"Detailed S3 upload error for {file_name}: {type(e).__name__} - {str(e)}"
+            )
             # Print out the full traceback for more detailed debugging
             import traceback
+
             traceback.print_exc()
             raise Exception(f"Could not upload file to S3: {str(e)}") from e
 
@@ -97,7 +111,10 @@ class S3Facade:
                 byte_content = f.read()
 
             self.s3.put_object(
-                Bucket=self.data_schema_bucket_name, Key=file_name, Body=byte_content,    ContentType='application/json'
+                Bucket=self.data_schema_bucket_name,
+                Key=file_name,
+                Body=byte_content,
+                ContentType="application/json",
             )
 
             file_url = f"https://{self.data_schema_bucket_name}.s3.{self.aws_region}.amazonaws.com/{file_name}"
@@ -110,30 +127,40 @@ class S3Facade:
     def download_schema(self, file_name: str):
         try:
             # Download the file from S3
-            response = self.s3.get_object(Bucket=self.data_schema_bucket_name, Key=file_name)
+            response = self.s3.get_object(
+                Bucket=self.data_schema_bucket_name, Key=file_name
+            )
 
             # Log successful download
             configured_logger.debug(
-                f"Data schema '{file_name}' downloaded successfully from S3 bucket '{self.data_schema_bucket_name}'.")
+                f"Data schema '{file_name}' downloaded successfully from S3 bucket '{self.data_schema_bucket_name}'."
+            )
 
             # Return the content of the file
-            return response['Body'].read()
+            return response["Body"].read()
 
         except NoCredentialsError as e:
             configured_logger.error(
-                f"S3 download error: Missing credentials when downloading '{file_name}' from bucket '{self.data_schema_bucket_name}': {e}")
-            raise Exception(f"Missing credentials for S3 download of '{file_name}'.") from e
+                f"S3 download error: Missing credentials when downloading '{file_name}' from bucket '{self.data_schema_bucket_name}': {e}"
+            )
+            raise Exception(
+                f"Missing credentials for S3 download of '{file_name}'."
+            ) from e
 
         except ClientError as e:
             configured_logger.error(
-                f"S3 download error: Client error when downloading '{file_name}' from bucket '{self.data_schema_bucket_name}': {e}")
+                f"S3 download error: Client error when downloading '{file_name}' from bucket '{self.data_schema_bucket_name}': {e}"
+            )
             raise Exception(f"Client error during S3 download of '{file_name}'.") from e
 
         except Exception as e:
             configured_logger.error(
-                f"Unexpected error downloading '{file_name}' from S3 bucket '{self.data_schema_bucket_name}': {e}")
-            raise Exception(f"Unexpected error during S3 download of '{file_name}'.") from e
+                f"Unexpected error downloading '{file_name}' from S3 bucket '{self.data_schema_bucket_name}': {e}"
+            )
+            raise Exception(
+                f"Unexpected error during S3 download of '{file_name}'."
+            ) from e
 
 
 s3 = S3Facade()
-s3.upload_schema("software_launch.json")
+# s3.upload_schema("registration.json")

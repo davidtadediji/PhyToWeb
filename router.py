@@ -23,13 +23,13 @@ router = APIRouter(
 class FormMetadata:
     def __init__(
         self,
-        form_schema_key: str,
+        data_schema_key: str,
         case_type: str,
         case_sub_type: str,
         user_id: str,
         timestamp: str = None,
     ):
-        self.form_schema_key = form_schema_key
+        self.data_schema_key = data_schema_key
         self.case_type = case_type
         self.case_sub_type = case_sub_type
         self.user_id = user_id
@@ -39,7 +39,7 @@ class FormMetadata:
 @router.post("/extract/", response_class=JSONResponse)
 async def extract_form_data(
     file: UploadFile = File(...),
-    form_schema_key: str = Form(...),
+    data_schema_key: str = Form(...),
     case_type: str = Form(...),
     case_sub_type: str = Form(...),
     user_id: str = Form(...),
@@ -50,7 +50,7 @@ async def extract_form_data(
 
     Args:
         file (UploadFile): The uploaded file containing form data.
-        form_schema_key (str): Form Schema Key.
+        data_schema_key (str): Form Schema Key.
         case_type (str): Type of case.
         case_sub_type (str): Subtype of case.
         user_id (str): User ID.
@@ -62,7 +62,7 @@ async def extract_form_data(
     try:
         # Create a FormMetadata object with the provided data
         metadata = FormMetadata(
-            form_schema_key=form_schema_key,
+            data_schema_key=data_schema_key,
             case_type=case_type,
             case_sub_type=case_sub_type,
             user_id=user_id,
@@ -85,11 +85,15 @@ async def extract_form_data(
         # Debug: Log the Textract response
         print("Textract Response:", form_text_data)
 
-        result = process_form_data(form_schema_key=form_schema_key, input_content=str(form_text_data))
+        result = process_form_data(
+            data_schema_key=f"{data_schema_key}.json",
+            use_pydantic=False,
+            input_content=(str(form_text_data)),
+        )
 
         # Compile the response data
         response_data = {
-            "form_schema_key": metadata.form_schema_key,
+            "data_schema_key": metadata.data_schema_key,
             "case_type": metadata.case_type,
             "case_sub_type": metadata.case_sub_type,
             "user_id": metadata.user_id,
