@@ -1,9 +1,10 @@
 import os
 from datetime import datetime, timezone
-
+import json
 from dotenv import load_dotenv
-from fastapi import APIRouter, File, UploadFile, Form
+from fastapi import APIRouter, File, UploadFile, Form, Body
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from logger import configured_logger
 from s3_facade import s3
@@ -35,6 +36,63 @@ class FormMetadata:
         self.case_sub_type = case_sub_type
         self.user_id = user_id
         self.timestamp = timestamp or datetime.now(timezone.utc).isoformat()
+
+class SchemaUploadRequest(BaseModel):
+    key: str
+    data_schema: dict
+
+
+@router.post("/upload-schema", response_class=JSONResponse)
+async def upload_schema(
+ payload: SchemaUploadRequest = Body(...)
+):
+    """
+    Upload a schema by providing a key and a JSON payload.
+
+    Args:
+        data_schema_key (str): The unique identifier for the schema.
+        schema (dict): The JSON object representing the schema.
+
+    Returns:
+        JSONResponse: A response indicating success or failure.
+    """
+    try:
+        # Extract data
+        data_schema_key = payload.key
+        schema = payload.data_schema
+
+        # Debug: Log the received inputs
+        configured_logger.info(f"Received data_schema_key: {data_schema_key}")
+        print(f"Received schema: {schema}")
+
+        # Process the schema as needed (e.g., save it to S3, database, or a file)
+        # Example: Save schema to a file (replace with actual implementation)
+        file_name = "schema.json"
+        with open("schema.json", "w") as file:
+            json.dump(schema, file, indent=4)
+
+        # Debug: Confirm saving the file
+        print(f"Schema saved to {file_name}")
+
+        s3.upload_schema(data_schema_key)
+
+        # Return a success response
+        return JSONResponse(
+            content={
+                "message": "Schema uploaded successfully",
+                "data_schema_key": data_schema_key,
+            },
+            status_code=200,
+        )
+
+    except Exception as e:
+        # Handle errors
+        configured_logger.error(f"Error uploading schema --> {e}")
+        return JSONResponse(
+            content={"error": "Failed to upload schema", "details": str(e)},
+            status_code=500,
+        )
+
 
 @router.post("/extract/", response_class=JSONResponse)
 async def extract_form_data(

@@ -84,14 +84,16 @@ class S3Facade:
             configured_logger.info(f"File uploaded to S3: {file_url}")
             return file_url
         except Exception as e:
-            raise Exception(f"Could not upload file {file_name} {type(e).__name__} to S3 -> {str(e)}")
+            raise Exception(
+                f"Could not upload file {file_name} {type(e).__name__} to S3 -> {str(e)}"
+            )
 
-    def upload_schema(self, file_name: str) -> str:
+    def upload_schema(self, schema_key: str) -> str:
         """
         Uploads a schema file to the specified S3 bucket and returns the URL of the uploaded file.
 
         Args:
-            file_name (str): The name of the file to upload.
+            schema_key (str): The name of the file to upload.
 
         Returns:
             str: The URL of the uploaded schema in S3.
@@ -103,16 +105,16 @@ class S3Facade:
 
             self.s3.put_object(
                 Bucket=self.data_schema_bucket_name,
-                Key=file_name,
+                Key=schema_key,
                 Body=byte_content,
                 ContentType="application/json",
             )
 
-            file_url = f"https://{self.data_schema_bucket_name}.s3.{self.aws_region}.amazonaws.com/{file_name}"
+            file_url = f"https://{self.data_schema_bucket_name}.s3.{self.aws_region}.amazonaws.com/{schema_key}"
             configured_logger.info(f"Schema uploaded to S3: {file_url}")
             return file_url
         except (NoCredentialsError, ClientError) as e:
-            raise Exception(f"Could not upload schema {file_name} to S3 -> {e}")
+            raise Exception(f"Could not upload schema {schema_key} to S3 -> {e}")
 
     def download_schema(self, file_name: str):
         try:
@@ -138,7 +140,9 @@ class S3Facade:
             ) from e
 
         except ClientError as e:
-            raise Exception(f"Client error during S3 download of '{file_name}' from bucket '{self.data_schema_bucket_name}' -> {e}")
+            raise Exception(
+                f"Client error during S3 download of '{file_name}' from bucket '{self.data_schema_bucket_name}' -> {e}"
+            )
 
         except Exception as e:
             raise Exception(
