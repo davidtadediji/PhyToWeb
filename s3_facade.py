@@ -1,5 +1,3 @@
-# file_upload.py
-
 import boto3
 import os
 from dotenv import load_dotenv

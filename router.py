@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from logger import configured_logger
-from main import process_form_data
+from llm_client import process_form_data
 from s3_facade import s3
 from text_extractor import text_extractor_enhanced
 
@@ -25,12 +25,12 @@ router = APIRouter(
 # Define a Pydantic model for the additional fields
 class FormMetadata:
     def __init__(
-            self,
-            data_schema_key: str,
-            case_type: str,
-            case_sub_type: str,
-            user_id: str,
-            timestamp: str = None,
+        self,
+        data_schema_key: str,
+        case_type: str,
+        case_sub_type: str,
+        user_id: str,
+        timestamp: str = None,
     ):
         self.data_schema_key = data_schema_key
         self.case_type = case_type
@@ -45,9 +45,7 @@ class SchemaUploadRequest(BaseModel):
 
 
 @router.post("/upload-schema", response_class=JSONResponse)
-async def upload_schema(
-        payload: SchemaUploadRequest = Body(...)
-):
+async def upload_schema(payload: SchemaUploadRequest = Body(...)):
     """
     Upload a schema by providing a key and a JSON payload.
 
@@ -98,12 +96,12 @@ async def upload_schema(
 
 @router.post("/extract/", response_class=JSONResponse)
 async def extract_form_data(
-        file: UploadFile = File(...),
-        data_schema_key: str = Form(...),
-        case_type: str = Form(...),
-        case_sub_type: str = Form(...),
-        user_id: str = Form(...),
-        timestamp: str = Form(None),
+    file: UploadFile = File(...),
+    data_schema_key: str = Form(...),
+    case_type: str = Form(...),
+    case_sub_type: str = Form(...),
+    user_id: str = Form(...),
+    timestamp: str = Form(None),
 ):
     """
     Extract form data from the uploaded file using AWS Textract.
