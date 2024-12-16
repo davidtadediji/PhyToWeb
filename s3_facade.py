@@ -66,12 +66,10 @@ class S3Facade:
         # Explicit validation of critical parameters
         if not self.form_pdf_bucket_name:
             error_msg = "S3 bucket name is not set. Check your .env file and S3_FORM_BUCKET variable."
-            configured_logger.error(error_msg)
             raise ValueError(error_msg)
 
         if not self.aws_access_key_id or not self.aws_secret_access_key:
             error_msg = "AWS credentials are missing. Check your .env file."
-            configured_logger.error(error_msg)
             raise ValueError(error_msg)
 
         try:
@@ -83,17 +81,10 @@ class S3Facade:
             )
 
             file_url = f"https://{self.form_pdf_bucket_name}.s3.{self.aws_region}.amazonaws.com/{file_name}"
-            configured_logger.debug(f"File uploaded to S3: {file_url}")
+            configured_logger.info(f"File uploaded to S3: {file_url}")
             return file_url
         except Exception as e:
-            configured_logger.error(
-                f"Detailed S3 upload error for {file_name}: {type(e).__name__} - {str(e)}"
-            )
-            # Print out the full traceback for more detailed debugging
-            import traceback
-
-            traceback.print_exc()
-            raise Exception(f"Could not upload file to S3: {str(e)}") from e
+            raise Exception(f"Could not upload file {file_name} {type(e).__name__} to S3 -> {str(e)}")
 
     def upload_schema(self, file_name: str) -> str:
         """
@@ -118,11 +109,10 @@ class S3Facade:
             )
 
             file_url = f"https://{self.data_schema_bucket_name}.s3.{self.aws_region}.amazonaws.com/{file_name}"
-            configured_logger.debug(f"Schema uploaded to S3: {file_url}")
+            configured_logger.info(f"Schema uploaded to S3: {file_url}")
             return file_url
         except (NoCredentialsError, ClientError) as e:
-            configured_logger.error(f"S3 upload error, {file_name}: {e}")
-            raise Exception("Could not upload schema to S3.") from e
+            raise Exception(f"Could not upload schema {file_name} to S3 -> {e}")
 
     def download_schema(self, file_name: str):
         try:
@@ -148,17 +138,11 @@ class S3Facade:
             ) from e
 
         except ClientError as e:
-            configured_logger.error(
-                f"S3 download error: Client error when downloading '{file_name}' from bucket '{self.data_schema_bucket_name}': {e}"
-            )
-            raise Exception(f"Client error during S3 download of '{file_name}'.") from e
+            raise Exception(f"Client error during S3 download of '{file_name}' from bucket '{self.data_schema_bucket_name}' -> {e}")
 
         except Exception as e:
-            configured_logger.error(
-                f"Unexpected error downloading '{file_name}' from S3 bucket '{self.data_schema_bucket_name}': {e}"
-            )
             raise Exception(
-                f"Unexpected error during S3 download of '{file_name}'."
+                f"Unexpected error during S3 download of '{file_name}' from bucket '{self.data_schema_bucket_name}' {e}"
             ) from e
 
 

@@ -1,7 +1,9 @@
 # server.py
 from contextlib import asynccontextmanager
+
 import uvicorn
 from dotenv import load_dotenv
+
 from router import router
 
 # Load environment variables from .env file
@@ -29,7 +31,6 @@ app = FastAPI(
     title=f"{app_name} Service",
     lifespan=lifespan,  # Define the lifespan context manager
 )
-
 
 app.include_router(router)
 

@@ -190,8 +190,7 @@ def start_async_textract_analysis(s3_file_name: str) -> str:
         )
         return response["JobId"]
     except (NoCredentialsError, ClientError) as e:
-        configured_logger.error(f"Textract error: {e}")
-        raise Exception("Could not start Textract analysis.") from e
+        raise Exception(f"Could not start Textract analysis -> {e}")
 
 
 def get_async_textract_results(job_id: str) -> dict:
@@ -220,8 +219,7 @@ def get_async_textract_results(job_id: str) -> dict:
             time.sleep(5)  # Sleep for 5 seconds before checking again
 
     except (NoCredentialsError, ClientError) as e:
-        configured_logger.error(f"Textract error: {e}")
-        raise Exception("Error fetching Textract results.") from e
+        raise Exception(f"Error fetching Textract results -> {e}")
 
 
 def text_extractor_enhanced(s3_file_name: str) -> dict:
@@ -266,8 +264,7 @@ def text_extractor_enhanced(s3_file_name: str) -> dict:
         return extracted_data
 
     except (NoCredentialsError, ClientError) as e:
-        configured_logger.error(f"Textract error: {e}")
-        raise Exception("Could not extract text using Textract.") from e
+        raise Exception(f"Could not extract text using Textract {e}")
 
 
 # Example usage

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 
+from logger import configured_logger
 from s3_facade import s3
 from main import process_form_data
 from text_extractor import text_extractor_enhanced
@@ -33,8 +34,7 @@ class FormMetadata:
         self.case_type = case_type
         self.case_sub_type = case_sub_type
         self.user_id = user_id
-        self.timestamp = timestamp or datetime.now(timezone.utc)
-
+        self.timestamp = timestamp or datetime.now(timezone.utc).isoformat()
 
 @router.post("/extract/", response_class=JSONResponse)
 async def extract_form_data(
@@ -88,7 +88,7 @@ async def extract_form_data(
         result = process_form_data(
             data_schema_key=f"{data_schema_key}.json",
             use_pydantic=False,
-            input_content=(str(form_text_data)),
+            input_content=form_text_data,
         )
 
         # Compile the response data
@@ -107,7 +107,7 @@ async def extract_form_data(
 
     except Exception as e:
         # Handle errors
-        print("Error processing the file:", e)
+        configured_logger.error(f"Error processing the file --> {e}")
         return JSONResponse(
             content={"error": "Failed to extract form data", "details": str(e)},
             status_code=500,

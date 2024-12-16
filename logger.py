@@ -1,11 +1,8 @@
-import os
 import logging
+import os
 import sys
 from logging.handlers import RotatingFileHandler
-import traceback
-import json
-from datetime import datetime
-import diagnostics
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,11 +31,11 @@ def setup_logger(name=app_name, log_file="phy_to_web.log", level=logging.INFO):
     # Clear any existing handlers
     logger.handlers.clear()
 
-    # Console Handler
+    # Console Handler with Line Number
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
     )
     console_handler.setFormatter(console_formatter)
 
