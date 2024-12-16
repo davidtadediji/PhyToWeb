@@ -1,241 +1,231 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "title": "form_data_schema",
-    "description": "Form Data Schema",
+    "title": "space_mission_schema",
+    "description": "Schema for Space Exploration Mission Launch",
     "properties": {
-        "CaseDetails": {
+        "MissionDetails": {
             "type": "object",
             "properties": {
-                "ocdCaseTypeId": {
+                "missionId": {
                     "type": "string"
                 },
-                "ocdCaseSubTypeId": {
-                    "type": "string"
-                },
-                "ocdWorkflowId": {
-                    "type": "string"
-                },
-                "ocdAssignerId": {
-                    "type": "string"
-                },
-                "ocdAssignedDate": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "ocdAssigneeId": {
-                    "type": "string"
-                },
-                "ocdStatusId": {
-                    "type": "string"
-                },
-                "ocdActionId": {
-                    "type": "string"
-                },
-                "ocdIsEditable": {
-                    "type": "boolean"
-                }
-            },
-            "required": [
-                "ocdCaseTypeId",
-                "ocdCaseSubTypeId",
-                "ocdAssignerId",
-                "ocdAssignedDate",
-                "ocdAssigneeId",
-                "ocdStatusId",
-                "ocdActionId",
-                "ocdIsEditable"
-            ]
-        },
-        "Product": {
-            "type": "object",
-            "properties": {
-                "tempId": {
-                    "type": "string"
-                },
-                "productName": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "productType": {
+                "missionName": {
                     "type": "string"
                 },
                 "launchDate": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date-time"
                 },
-                "category": {
+                "missionType": {
                     "type": "string"
                 },
-                "website": {
-                    "type": "string",
-                    "format": "uri"
-                },
-                "productDescription": {
+                "status": {
                     "type": "string"
                 },
-                "logo": {
-                    "type": "string",
-                    "format": "uri"
+                "isManned": {
+                    "type": "boolean"
                 }
             },
             "required": [
-                "productName",
-                "version",
-                "productType",
+                "missionId",
+                "missionName",
                 "launchDate",
-                "category",
-                "website",
-                "productDescription",
-                "logo"
+                "missionType",
+                "status",
+                "isManned"
             ]
         },
-        "Address": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "tempId": {
-                        "type": "string"
-                    },
-                    "address1": {
-                        "type": "string"
-                    },
-                    "address2": {
-                        "type": "string"
-                    },
-                    "addressType": {
-                        "type": "string"
-                    },
-                    "country": {
-                        "type": "string"
-                    },
-                    "postalCode": {
-                        "type": "string"
-                    },
-                    "startDate": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "endDate": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
+        "Spacecraft": {
+            "type": "object",
+            "properties": {
+                "spacecraftId": {
+                    "type": "string"
                 },
-                "required": [
-                    "address1",
-                    "addressType",
-                    "country",
-                    "postalCode",
-                    "startDate",
-                    "endDate"
-                ]
-            }
-        },
-        "Contact": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "tempId": {
-                        "type": "string"
-                    },
-                    "contactType": {
-                        "type": "string"
-                    },
-                    "contactValue": {
-                        "type": "string"
-                    },
-                    "isPrimary": {
-                        "type": "boolean"
-                    }
+                "name": {
+                    "type": "string"
                 },
-                "required": [
-                    "contactType",
-                    "contactValue",
-                    "isPrimary"
-                ]
-            }
+                "model": {
+                    "type": "string"
+                },
+                "manufacturer": {
+                    "type": "string"
+                },
+                "launchMass": {
+                    "type": "number"
+                },
+                "capacity": {
+                    "type": "number"
+                },
+                "powerSource": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "spacecraftId",
+                "name",
+                "model",
+                "manufacturer",
+                "launchMass",
+                "capacity",
+                "powerSource"
+            ]
         },
-        "ContactPerson": {
+        "LaunchSite": {
+            "type": "object",
+            "properties": {
+                "siteId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "coordinates": {
+                    "type": "object",
+                    "properties": {
+                        "latitude": {
+                            "type": "number"
+                        },
+                        "longitude": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "latitude",
+                        "longitude"
+                    ]
+                }
+            },
+            "required": [
+                "siteId",
+                "name",
+                "location",
+                "country",
+                "coordinates"
+            ]
+        },
+        "Crew": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "tempId": {
+                    "crewId": {
                         "type": "string"
                     },
-                    "firstName": {
-                        "type": "string"
-                    },
-                    "lastName": {
-                        "type": "string"
-                    },
-                    "assignedPerson": {
-                        "type": "string"
-                    },
-                    "address": {
-                        "type": "string"
-                    },
-                    "organisation": {
+                    "name": {
                         "type": "string"
                     },
                     "role": {
                         "type": "string"
+                    },
+                    "nationality": {
+                        "type": "string"
+                    },
+                    "experience": {
+                        "type": "string"
                     }
                 },
                 "required": [
-                    "firstName",
-                    "lastName",
-                    "assignedPerson",
-                    "address",
-                    "organisation",
-                    "role"
+                    "crewId",
+                    "name",
+                    "role",
+                    "nationality",
+                    "experience"
                 ]
             }
         },
-        "FinancialInformation": {
+        "Payload": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "tempId": {
+                    "payloadId": {
                         "type": "string"
                     },
-                    "dateFrom": {
-                        "type": "string",
-                        "format": "date"
-                    },
-                    "dateTo": {
-                        "type": "string",
-                        "format": "date"
-                    },
-                    "accountType": {
+                    "description": {
                         "type": "string"
                     },
-                    "amount": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "mass": {
                         "type": "number"
                     },
-                    "address": {
+                    "destination": {
                         "type": "string"
                     }
                 },
                 "required": [
-                    "accountType",
-                    "amount",
-                    "address"
+                    "payloadId",
+                    "description",
+                    "type",
+                    "mass",
+                    "destination"
                 ]
             }
+        },
+        "Budget": {
+            "type": "object",
+            "properties": {
+                "totalBudget": {
+                    "type": "number"
+                },
+                "allocatedFunds": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "department": {
+                                "type": "string"
+                            },
+                            "amount": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "department",
+                            "amount"
+                        ]
+                    }
+                },
+                "sponsorDetails": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "sponsorName": {
+                                "type": "string"
+                            },
+                            "contribution": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "sponsorName",
+                            "contribution"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "totalBudget",
+                "allocatedFunds",
+                "sponsorDetails"
+            ]
         }
     },
     "required": [
-        "CaseDetails",
-        "Product",
-        "Address",
-        "Contact",
-        "ContactPerson",
-        "FinancialInformation"
+        "MissionDetails",
+        "Spacecraft",
+        "LaunchSite",
+        "Crew",
+        "Payload",
+        "Budget"
     ]
 }

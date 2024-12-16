@@ -105,7 +105,7 @@ class S3Facade:
 
             self.s3.put_object(
                 Bucket=self.data_schema_bucket_name,
-                Key=schema_key,
+                Key=f"{schema_key}.json",
                 Body=byte_content,
                 ContentType="application/json",
             )
