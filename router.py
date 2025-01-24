@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime, timezone
+import uuid
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, File, UploadFile, Form, Body
@@ -130,15 +131,18 @@ async def extract_form_data(
         # Construct a unique filename
         original_filename = file.filename
         file_extension = os.path.splitext(original_filename)[1]
+
+        # Generate a unique UUID
+        file_uuid = uuid.uuid4()
         constructed_filename = (
-            f"{metadata.case_type}_{metadata.case_sub_type}_{metadata.user_id}_{metadata.timestamp}"
+            f"{metadata.case_type}_{metadata.case_sub_type}_{metadata.user_id}_{file_uuid}"
             f"{file_extension}"
         )
         file_content = await file.read()
 
-        s3.upload_pdf_form(file_content=file_content, file_name=constructed_filename)
+        uploaded_filename = s3.upload_pdf_form_with_caching(file_content=file_content, file_name=constructed_filename)
 
-        form_text_data = text_extractor_enhanced(constructed_filename)
+        form_text_data = text_extractor_enhanced(uploaded_filename)
 
         # Debug: Log the Textract response
         print("Textract Response:", form_text_data)

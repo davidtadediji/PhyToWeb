@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from logger import configured_logger
 from botocore.exceptions import NoCredentialsError, ClientError
+from redis_facade import redis_client
+from utils import is_valid_filename, get_file_hash
 
 load_dotenv()
 
@@ -42,7 +44,7 @@ class S3Facade:
             region_name=self.aws_region,
         )
 
-    def upload_pdf_form(self, file_content: bytes, file_name: str) -> str:
+    def upload_pdf_form_with_caching(self, file_content: bytes, file_name: str) -> str:
         """
         Uploads a pdf form to the specified S3 bucket and returns the URL of the uploaded file.
 
@@ -53,38 +55,52 @@ class S3Facade:
         Returns:
             str: The URL of the uploaded file in S3.
         """
-        # Add extensive logging and validation
-        configured_logger.info(f"Attempting to upload file: {file_name}")
-        configured_logger.info(
-            f"Bucket name from environment: '{self.form_pdf_bucket_name}'"
-        )
-        configured_logger.info(f"AWS Access Key ID: '{bool(self.aws_access_key_id)}'")
-        configured_logger.info(f"AWS Region: '{self.aws_region}'")
 
-        # Explicit validation of critical parameters
-        if not self.form_pdf_bucket_name:
-            error_msg = "S3 bucket name is not set. Check your .env file and S3_FORM_BUCKET variable."
-            raise ValueError(error_msg)
+        # Validate filename
+        if not is_valid_filename(file_name):
+            raise ValueError(f"Invalid file name: {file_name}")
 
-        if not self.aws_access_key_id or not self.aws_secret_access_key:
-            error_msg = "AWS credentials are missing. Check your .env file."
-            raise ValueError(error_msg)
+        file_hash = get_file_hash(file_content)
 
-        try:
-            # Explicitly pass all parameters
-            self.s3.put_object(
-                Bucket=str(self.form_pdf_bucket_name),  # Ensure it's a string
-                Key=file_name,
-                Body=file_content,
+        if redis_client.exists_cache(file_hash):
+            existing_file_name = redis_client.get_cache(file_hash)
+            configured_logger.warn(f"File content already exists. Returning existing file name: {existing_file_name}")
+            return existing_file_name
+        else:
+            # Upload the new file and store the hash and filename in cache
+            # Add extensive logging and validation
+            configured_logger.info(f"Attempting to upload file: {file_name}")
+            configured_logger.info(
+                f"Bucket name from environment: '{self.form_pdf_bucket_name}'"
             )
+            configured_logger.info(f"AWS Access Key ID: '{bool(self.aws_access_key_id)}'")
+            configured_logger.info(f"AWS Region: '{self.aws_region}'")
 
-            file_url = f"https://{self.form_pdf_bucket_name}.s3.{self.aws_region}.amazonaws.com/{file_name}"
-            configured_logger.info(f"File uploaded to S3: {file_url}")
-            return file_url
-        except Exception as e:
-            raise Exception(
-                f"Could not upload file {file_name} {type(e).__name__} to S3 -> {str(e)}"
-            )
+            # Explicit validation of critical parameters
+            if not self.form_pdf_bucket_name:
+                error_msg = "S3 bucket name is not set. Check your .env file and S3_FORM_BUCKET variable."
+                raise ValueError(error_msg)
+
+            if not self.aws_access_key_id or not self.aws_secret_access_key:
+                error_msg = "AWS credentials are missing. Check your .env file."
+                raise ValueError(error_msg)
+
+            try:
+                # Explicitly pass all parameters
+                self.s3.put_object(
+                    Bucket=str(self.form_pdf_bucket_name),  # Ensure it's a string
+                    Key=file_name,
+                    Body=file_content,
+                )
+
+                file_url = f"https://{self.form_pdf_bucket_name}.s3.{self.aws_region}.amazonaws.com/{file_name}"
+                configured_logger.info(f"File uploaded to S3: {file_url}")
+                redis_client.set_cache(file_hash, file_name)
+                return file_name
+            except Exception as e:
+                raise Exception(
+                    f"Could not upload file {file_name} {type(e).__name__} to S3 -> {str(e)}"
+                )
 
     def upload_schema(self, schema_key: str) -> str:
         """
