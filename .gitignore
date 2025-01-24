@@ -3,3 +3,4 @@
 .env
 __pycache__/
 *.log
+node_modules/

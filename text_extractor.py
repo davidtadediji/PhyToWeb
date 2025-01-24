@@ -222,7 +222,7 @@ def get_async_textract_results(job_id: str) -> dict:
         raise Exception(f"Error fetching Textract results -> {e}")
 
 
-def text_extractor_enhanced(s3_file_name: str) -> dict:
+def text_extractor_enhanced(s3_file_name: str) -> str:
     """
     Enhanced text extraction using AWS Textract with comprehensive parsing.
 
@@ -243,25 +243,37 @@ def text_extractor_enhanced(s3_file_name: str) -> dict:
         word_map = map_word_ids(response)
 
         # Extract different types of information
-        extracted_data = {
-            "tables": extract_tables(response, word_map),
-            "form_fields": extract_form_fields_advanced(response, word_map),
-            "lines": extract_text_enhanced(response, "LINE"),
-        }
+        tables = extract_tables(response, word_map)
+        form_fields = extract_form_fields_advanced(response, word_map)
+        lines = extract_text_enhanced(response, "LINE")
 
-        # Logging and printing extracted information
-        configured_logger.info(f"Extracted data from {s3_file_name}")
-        print("Extracted Form Fields:")
-        for key, value in extracted_data["form_fields"].items():
-            print(f"{key}: {value}")
+        # Format the extracted data as text
+        text_output = []
 
-        print("\nExtracted Tables:")
-        for table_key, table_data in extracted_data["tables"].items():
-            print(f"{table_key}:")
+        # Format form fields
+        text_output.append("Extracted Form Fields:")
+        for key, value in form_fields.items():
+            text_output.append(f"- {key}: {value}")
+
+        # Format tables
+        text_output.append("\nExtracted Tables:")
+        for table_key, table_data in tables.items():
+            text_output.append(f"{table_key}:")
             for row in table_data:
-                print(row)
+                text_output.append(" | ".join(row))
 
-        return extracted_data
+        # Format lines
+        text_output.append("\nExtracted Text Lines:")
+        text_output.extend(lines)
+
+        # Combine all text
+        formatted_text = "\n".join(text_output)
+
+        # Log the extracted data
+        configured_logger.info(f"Extracted data from {s3_file_name}")
+        print(formatted_text)
+
+        return formatted_text
 
     except (NoCredentialsError, ClientError) as e:
         raise Exception(f"Could not extract text using Textract {e}")

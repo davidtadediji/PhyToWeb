@@ -144,8 +144,8 @@ async def extract_form_data(
         print("Textract Response:", form_text_data)
 
         result = process_form_data(
-            data_schema_key=f"{data_schema_key}.json",
-            use_pydantic=False,
+            data_schema_key=data_schema_key,
+            use_pydantic=True,
             input_content=form_text_data,
         )
 

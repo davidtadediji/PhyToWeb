@@ -1,19 +1,21 @@
 import json
 import os
 from abc import ABC, abstractmethod
+from datetime import datetime
+
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
+
 from s3_facade import s3
-from datetime import datetime
 
 load_dotenv()
 
 # Load API key from environment variables
 api_key = os.getenv("OPENAI_API_KEY")
 
-from models import FormDataSchema
+from models import FormDataSchema, Resume
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -95,7 +97,7 @@ class PydanticModelStrategy(ResponseFormatStrategy):
                 # Handle nested Pydantic models
                 def serialize(obj):
                     if isinstance(obj, BaseModel):
-                        return obj.dict()
+                        return obj.model_dump()
                     elif isinstance(obj, list):
                         return [serialize(item) for item in obj]
                     elif isinstance(obj, dict):
@@ -149,9 +151,14 @@ static_case_details = {
     "ocdIsEditable": False,
 }
 
+DATA_SCHEMA_MAPPER = {
+    'resume': Resume,
+    'registration_for_ngo_npo': FormDataSchema
+}
+
 
 def process_form_data(
-    data_schema_key: str = None, use_pydantic: bool = False, input_content: dict = None
+        data_schema_key: str = None, use_pydantic: bool = False, input_content: str = None
 ):
     """
     Process form data using LLM with either Pydantic or JSON Schema strategy.
@@ -171,13 +178,12 @@ def process_form_data(
             )
 
         print(input_content)
-        print(str(input_content))
 
         # Choose strategy based on input
         if use_pydantic:
-            strategy = PydanticModelStrategy(FormDataSchema)
+            strategy = PydanticModelStrategy(DATA_SCHEMA_MAPPER[data_schema_key])
         else:
-            strategy = JsonSchemaStrategy(data_schema_key)
+            strategy = JsonSchemaStrategy(f"{data_schema_key}.json")
 
         # Initialize LLM client with the chosen strategy
         llm_client = LLMClient(model="gpt-4o-mini", strategy=strategy)
@@ -189,7 +195,7 @@ def process_form_data(
         response = llm_client.invoke(
             [
                 SystemMessage(content="Extract the form data."),
-                HumanMessage(content=str(input_content)),
+                HumanMessage(content=input_content),
             ]
         )
 
@@ -212,107 +218,103 @@ if __name__ == "__main__":
 
     # Use JSON Schema strategy
     json_schema_response = process_form_data(
-        data_schema_key="software_launch.json",
-        use_pydantic=False,
-        input_content=(
-            {
-                "lines": [
-                    "Software Product Launch Form",
-                    "Case Details",
-                    "Case Type: SOFTWARE_LAUNCH",
-                    "Sub Type: PRODUCT_RELEASE",
-                    "Workflow ID: WORKFLOW_98543261743928",
-                    "Assigner: usr_2223552837464501",
-                    "Assigned Date: 2024-12-14T00:00:00",
-                    "Assignee: usr_4435784936456202",
-                    "Status: STATUS_37849573201876432",
-                    "Action: ACTION_84297543058673",
-                    "Editable: True",
-                    "Product Details",
-                    "Product Name: CloudPro",
-                    "Version: 1.0.0",
-                    "Type: Software",
-                    "Launch Date: 2025-01-01",
-                    "Category: Cloud Computing",
-                    "Website: https://www.cloudpro.com",
-                    "Description: CloudPro is a next-gen cloud platform designed to streamline business operations.",
-                    "Address Details",
-                    "Address 1: 456 Innovation Road",
-                    "Address 2: Cloud Tech Park",
-                    "Address Type: Headquarters",
-                    "Country: USA",
-                    "Postal Code: 94105",
-                    "Start Date: 2024-12-14T00:00:00",
-                    "End Date: 2025-01-01T00:00:00",
-                    "Contact Details",
-                    "Contact Type: Email",
-                    "Contact Value: support@cloudpro.com",
-                    "Primary: True",
-                    "Contact Type: Phone",
-                    "Contact Value: +1-800-123-4567",
-                    "Primary: False",
-                    "Contact Persons",
-                    "Name: Alice Johnson",
-                    "Role: Product Manager",
-                    "Address: 456 Innovation Road, Cloud Tech Park, USA, 94105",
-                    "Organisation: CloudPro Inc.",
-                    "Name: Bob Miller",
-                    "Role: Marketing Lead",
-                    "Address: 456 Innovation Road, Cloud Tech Park, USA, 94105",
-                    "Organisation: CloudPro Inc.",
-                    "Financial Information",
-                    "Account Type: Marketing Expenses",
-                    "Amount: 200000",
-                    "Address: 456 Innovation Road, Cloud Tech Park, USA, 94105",
-                    "Date From: 2024-12-14",
-                    "Date To: 2025-01-01",
-                    "Account Type: Development Costs",
-                    "Amount: 500000",
-                    "Address: 456 Innovation Road, Cloud Tech Park, USA, 94105",
-                    "Date From: 2024-12-14",
-                    "Date To: 2025-01-01",
-                ],
-                "tables": {},
-                "form_fields": {
-                    "Address Type:": "Headquarters",
-                    "Assigner:": "usr_2223552837464501",
-                    "Status:": "STATUS_37849573201876432",
-                    "Country:": "USA",
-                    "Assignee:": "usr_4435784936456202",
-                    "Category:": "Cloud Computing",
-                    "Assigned Date:": "2024-12-14T00:00:00",
-                    "Product Name:": "SELECTED CloudPro",
-                    "Description:": "SELECTED CloudPro is a next-gen cloud platform designed to streamline business operations.",
-                    "Editable:": "True",
-                    "Address 2:": "Cloud Tech Park",
-                    "Address 1:": "456 Innovation Road",
-                    "Sub Type:": "PRODUCT_RELEASE",
-                    "Workflow ID:": "WORKFLOW_98543261743928",
-                    "Website:": "https://www.cloudpro.com",
-                    "Launch Date:": "2025-01-01",
-                    "Version:": "1.0.0",
-                    "Case Type:": "SOFTWARE_LAUNCH",
-                    "Type:": "Software",
-                    "Action:": "ACTION_84297543058673",
-                    "Primary:": "False",
-                    "Contact Value:": "support@cloudpro.com",
-                    "End Date:": "2025-01-01T00:00:00",
-                    "Contact Type:": "Email",
-                    "Postal Code:": "94105",
-                    "Amount:": "500000",
-                    "Organisation:": "CloudPro Inc.",
-                    "Account Type:": "Development Costs",
-                    "Address:": "456 Innovation Road, Cloud Tech Park, USA, 94105",
-                    "Role:": "Marketing Lead",
-                    "Name:": "Bob Miller",
-                    "Start Date:": "2024-12-14T00:00:00",
-                    "Date From:": "2024-12-14",
-                    "Date To:": "2025-01-01",
-                },
-            }
-        ),
+        data_schema_key="resume",
+        use_pydantic=True,
+        input_content="""
+        Extracted Form Fields:
+        - Led: 40%
+        - National ID: N/A
+        - GPA: 3.85/4.0
+        - Personal Identification: NID-2023-SF-987654
+        - Professional Summary: Innovative software engineer with 6+ years of experience in full-stack development, specializing in cloud-native applications and machine learning integrations. Proven track record of delivering scalable solutions that drive technological advancement.
+        - Stanford University: Sep 2015 - Jun 2019
+        - DataStream Inc.: Software Engineer
+        - San Francisco, CA 94105
+        - Optimized database queries, improving performance by 35%
+        - TechInnovate Solutions, Senior Software Engineer: Jan 2021 - Present
+        - Jul 2019 - Dec 2020
+        - Nov 2020: N/A
+        - Jun 2021: N/A
+        - Programming Languages: Python, Java, JavaScript, TypeScript
+        - Tools: Git, Jenkins, Terraform
+        - Spanish: Basic Conversational
+        - Frameworks: React, Node.js, Django, Spring Boot
+        - Japanese: Professional Working Proficiency
+        - Databases: PostgreSQL, MongoDB, Redis
+        - Cloud Technologies: AWS, Docker, Kubernetes
+        - English: Native
+        - Credential ID: N/A
+        - Google Cloud Credential ID: GCP-PDE-2021-123456
+        - AWS Certified Solutions Architect: N/A
+        - Google Cloud Professional Data Engineer: N/A
+        - Amazon Web Services: AWS-CSA-2020-987654
+        - Mar 2022
+        - Sep 2022
+        - Portfolio: arianakamura.dev
+        - LinkedIn: linkedin.com/in/aria-nakamura
+        - GitHub: github.com/arianakamura
+
+        Extracted Tables:
+
+        Extracted Text Lines:
+        aria.nakamura@techpro.com
+        Aria Nakamura
+        +1 (555) 123-4567
+        San Francisco, CA 94105
+
+        Professional Summary:
+        Innovative software engineer with 6+ years of experience in full-stack development, specializing in cloud-native applications and machine learning integrations. Proven track record of delivering scalable solutions that drive technological advancement.
+
+        Personal Identification:
+        National ID: NID-2023-SF-987654
+
+        Education:
+        Stanford University (Sep 2015 - Jun 2019)
+        Bachelor of Science in Computer Science
+        GPA: 3.85/4.0 | Minor in Artificial Intelligence
+
+        Work Experience:
+        TechInnovate Solutions, Senior Software Engineer (Jan 2021 - Present)
+        - Led development of microservices architecture, reducing system latency by 40%
+        - Implemented machine learning pipelines for a predictive analytics platform
+        - Mentored junior developers and conducted technical interviews
+
+        DataStream Inc., Software Engineer (Jul 2019 - Dec 2020)
+        - Developed RESTful APIs for real-time data processing systems
+        - Optimized database queries, improving performance by 35%
+        - Collaborated with cross-functional teams to deliver innovative solutions
+
+        Skills:
+        - Programming Languages: Python, Java, JavaScript, TypeScript
+        - Frameworks: React, Node.js, Django, Spring Boot
+        - Cloud Technologies: AWS, Docker, Kubernetes
+        - Databases: PostgreSQL, MongoDB, Redis
+        - Tools: Git, Jenkins, Terraform
+
+        Projects:
+        ML-Powered Customer Churn Predictor (Mar 2022 - Sep 2022)
+        - Developed machine learning model with 85% accuracy in predicting customer churn
+        - Utilized scikit-learn and TensorFlow for model development
+        - Created an interactive dashboard for visualizing predictive insights
+
+        Certifications:
+        - AWS Certified Solutions Architect (Nov 2020)
+          Amazon Web Services | Credential ID: AWS-CSA-2020-987654
+        - Google Cloud Professional Data Engineer (Jun 2021)
+          Google Cloud | Credential ID: GCP-PDE-2021-123456
+
+        Languages:
+        - English: Native
+        - Japanese: Professional Working Proficiency
+        - Spanish: Basic Conversational
+
+        Links:
+        - LinkedIn: linkedin.com/in/aria-nakamura
+        - GitHub: github.com/arianakamura
+        - Portfolio: arianakamura.dev
+        """
     )
 
     print("\nJSON Schema Response:")
 
-    print(json.dumps(json_schema_response, indent=4))
+    print(json.dumps(json_schema_response, default=str, indent=4))
