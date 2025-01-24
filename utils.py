@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 import hashlib
 import re
 import os
@@ -51,3 +51,9 @@ def is_valid_filename(file_name: str) -> bool:
         return False
 
     return True
+
+
+def validate_output(data):
+    """Validate the serialized output against expected structure"""
+    if not isinstance(data, dict):
+        raise ValidationError("Invalid output format: expected dictionary")

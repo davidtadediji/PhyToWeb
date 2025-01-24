@@ -1,14 +1,18 @@
 import json
 import os
+import time
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Optional
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
+from logger import configured_logger
 from s3_facade import s3
+from utils import validate_output
 
 load_dotenv()
 
@@ -25,6 +29,14 @@ class CustomJSONEncoder(json.JSONEncoder):
         elif isinstance(obj, BaseModel):
             return obj.model_dump()
         return super().default(obj)
+
+
+class LLMProcessingError(Exception):
+    """Custom exception for LLM processing errors"""
+
+    def __init__(self, message: str, original_error: Optional[Exception] = None):
+        super().__init__(message)
+        self.original_error = original_error
 
 
 # Strategy Interface
@@ -129,16 +141,34 @@ class LLMClient:
         self.model = model
         self.strategy = strategy
         self.llm = ChatOpenAI(model=model)
+        self.max_retries = 3
+        self.retry_delay = 2
 
     def prepare_llm(self):
         self.llm = self.strategy.prepare_llm(self.llm)
 
     def invoke(self, messages):
-        response = self.llm.invoke(messages)
-        return self.strategy.serialize_response(response)
+        for attempt in range(self.max_retries):
+            try:
+                response = self.llm.invoke(messages)
+                serialized = self.strategy.serialize_response(response)
+
+                validate_output(serialized)
+                return serialized
+            except ValidationError as ve:
+                configured_logger.error(f"Validation error: {str(ve)}")
+                if attempt == self.max_retries - 1:
+                    raise LLMProcessingError("Validation failed for LLM response", ve)
+            except Exception as e:
+                configured_logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
+                if attempt == self.max_retries - 1:
+                    raise LLMProcessingError("Max retries exceeded", e)
+
+                time.sleep(self.retry_delay * (attempt + 1))
+
+            # Static Case Details
 
 
-# Static Case Details
 static_case_details = {
     "ocdCaseTypeId": "REGISTRATION",
     "ocdCaseSubTypeId": "REGISTRATION_OF_NGO",
@@ -177,7 +207,8 @@ def process_form_data(
                 "Input content must be provided. input_content cannot be None."
             )
 
-        print(input_content)
+        configured_logger.info(f"Processing form data for schema: {data_schema_key}")
+        configured_logger.debug(f"Input content: {input_content[:200]}...")  # Log first 200 chars
 
         # Choose strategy based on input
         if use_pydantic:
@@ -202,12 +233,19 @@ def process_form_data(
         # Convert response to JSON string
         return response
 
-    except ValueError as ve:
-        raise Exception(f"ValueError occurred during form processing -> {ve}")
+    except LLMProcessingError as lpe:
+        configured_logger.error(f"LLM Processing failed: {str(lpe)}")
+        if lpe.original_error:
+            configured_logger.error(f"Original error: {str(lpe.original_error)}")
+        raise
+
+    except ValidationError as ve:
+        configured_logger.error(f"Data validation error: {str(ve)}")
+        raise LLMProcessingError("Data validation failed", ve)
 
     except Exception as e:
-        raise Exception(f"An error occurred during form processing -> {str(e)}")
-
+        configured_logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        raise LLMProcessingError("Processing failed", e)
 
 # Example usage
 if __name__ == "__main__":
