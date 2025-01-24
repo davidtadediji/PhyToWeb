@@ -101,72 +101,65 @@ class FormDataSchema(BaseModel):
     Activity: List[ActivityItem]
     FinancialInformation: List[FinancialInformation]
 
-
 class PersonalInformation(BaseModel):
     full_name: str = Field(..., description="Full name of the individual")
-    email: str = Field(..., description="Email address of the individual")
+    NID: Optional[str] = Field(None, description="NID identifier of the individual")
+    email: Optional[str] = Field(None, description="Email address of the individual")
     phone: Optional[str] = Field(None, description="Phone number of the individual")
     linkedin: Optional[str] = Field(None, description="LinkedIn profile URL")
     github: Optional[str] = Field(None, description="GitHub profile URL")
     portfolio: Optional[str] = Field(None, description="Portfolio website URL")
     address: Optional[str] = Field(None, description="Physical address of the individual")
 
-
 class Education(BaseModel):
     institution: str = Field(..., description="Name of the educational institution")
-    degree: str = Field(..., description="Degree obtained or being pursued")
-    field_of_study: str = Field(..., description="Field of study or major")
-    start_date: str = Field(..., description="Start date of the education (YYYY-MM-DD).")
+    degree: Optional[str] = Field(None, description="Degree obtained or being pursued")
+    field_of_study: Optional[str] = Field(None, description="Field of study or major")
+    start_date: Optional[str] = Field(None, description="Start date of the education (YYYY-MM-DD).")
     end_date: Optional[str] = Field(None, description="End date of the education (YYYY-MM-DD).")
     description: Optional[str] = Field(None, description="Additional details about the education")
 
-
 class WorkExperience(BaseModel):
     company: str = Field(..., description="Name of the company or organization")
-    position: str = Field(..., description="Job title or position held")
-    start_date: str = Field(..., description="Start date of the employment (YYYY-MM-DD).")
+    position: Optional[str] = Field(None, description="Job title or position held")
+    start_date: Optional[str] = Field(None, description="Start date of the employment (YYYY-MM-DD).")
     end_date: Optional[str] = Field(None, description="End date of the employment (YYYY-MM-DD).")
-    description: str = Field(..., description="Description of the role and responsibilities")
+    description: Optional[str] = Field(None, description="Description of the role and responsibilities")
     achievements: Optional[List[str]] = Field(None, description="List of key achievements in the role")
-
 
 class Skill(BaseModel):
     name: str = Field(..., description="Name of the skill")
     proficiency: Optional[str] = Field(None, description="Proficiency level of the skill (e.g., Beginner, Intermediate, Advanced)")
     years_of_experience: Optional[int] = Field(None, description="Years of experience with the skill")
 
-
 class Project(BaseModel):
     name: str = Field(..., description="Name of the project")
-    start_date: str = Field(..., description="Start date of the project (YYYY-MM-DD).")
+    start_date: Optional[str] = Field(None, description="Start date of the project (YYYY-MM-DD).")
     end_date: Optional[str] = Field(None, description="End date of the project (YYYY-MM-DD).")
-    description: str = Field(..., description="Description of the project")
-    technologies_used: List[str] = Field(..., description="List of technologies used in the project")
+    description: Optional[str] = Field(None, description="Description of the project")
+    technologies_used: Optional[List[str]] = Field(None, description="List of technologies used in the project")
     project_url: Optional[str] = Field(None, description="URL to the project (if available)")
-
 
 class Certification(BaseModel):
     name: str = Field(..., description="Name of the certification")
-    issuing_organization: str = Field(..., description="Organization that issued the certification")
-    issue_date: str = Field(..., description="Date the certification was issued (YYYY-MM-DD).")
+    issuing_organization: Optional[str] = Field(None, description="Organization that issued the certification")
+    issue_date: Optional[str] = Field(None, description="Date the certification was issued (YYYY-MM-DD).")
     expiration_date: Optional[str] = Field(None, description="Expiration date of the certification (YYYY-MM-DD).")
     credential_id: Optional[str] = Field(None, description="Credential ID or number")
     credential_url: Optional[str] = Field(None, description="URL to the credential (if available)")
-
 
 class Language(BaseModel):
     name: str = Field(..., description="Name of the language")
     proficiency: str = Field(..., description="Proficiency level in the language (e.g., Fluent, Intermediate, Basic)")
 
-
 class Resume(BaseModel):
     personal_information: PersonalInformation = Field(..., description="Personal details of the individual")
-    education: List[Education] = Field(..., description="List of educational qualifications")
-    work_experience: List[WorkExperience] = Field(..., description="List of work experiences")
-    skills: List[Skill] = Field(..., description="List of skills")
-    projects: List[Project] = Field(..., description="List of projects")
-    certifications: List[Certification] = Field(..., description="List of certifications")
-    languages: List[Language] = Field(..., description="List of languages spoken")
+    education: Optional[List[Education]] = Field(None, description="List of educational qualifications")
+    work_experience: Optional[List[WorkExperience]] = Field(None, description="List of work experiences")
+    skills: Optional[List[Skill]] = Field(None, description="List of skills")
+    projects: Optional[List[Project]] = Field(None, description="List of projects")
+    certifications: Optional[List[Certification]] = Field(None, description="List of certifications")
+    languages: Optional[List[Language]] = Field(None, description="List of languages spoken")
 
     @classmethod
     def model_json_schema(cls, *args, **kwargs) -> Dict[str, Any]:
