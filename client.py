@@ -15,8 +15,8 @@ def extract_resume_data(file):
         with open(file.name, 'rb') as f:
             files = {'file': f}
             form_data = {
-                'data_schema_key': 'resume',
-                'case_type': 'resume',
+                'data_schema_key': 'card',
+                'case_type': 'id_card',
                 'case_sub_type': 'professional',
                 'user_id': 'current_user'
             }
@@ -46,18 +46,18 @@ def extract_resume_data(file):
 
 
 # Create Gradio interface
-def resume_analyzer_interface():
+def data_analyzer_interface():
     interface = gr.Interface(
         fn=extract_resume_data,
-        inputs=gr.File(type="filepath", label="Upload Resume (PDF)"),
-        outputs=gr.JSON(label="Extracted Resume Data"),
-        title="Resume Analyzer",
-        description="Upload a resume to extract structured data"
+        inputs=gr.File(type="filepath", label="Upload Document (PDF/Image)"),
+        outputs=gr.JSON(label="Extracted Form Data"),
+        title="SilPhyToWeb",
+        description="Upload a document to extract structured data"
     )
     return interface
 
 
 # Launch the interface
 if __name__ == "__main__":
-    demo = resume_analyzer_interface()
+    demo = data_analyzer_interface()
     demo.launch()

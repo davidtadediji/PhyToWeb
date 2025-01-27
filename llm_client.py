@@ -19,7 +19,7 @@ load_dotenv()
 # Load API key from environment variables
 api_key = os.getenv("OPENAI_API_KEY")
 
-from models import FormDataSchema, Resume
+from models import FormDataSchema, Resume, Card
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -183,6 +183,7 @@ static_case_details = {
 
 DATA_SCHEMA_MAPPER = {
     'resume': Resume,
+    'card': Card,
     'registration_for_ngo_npo': FormDataSchema
 }
 

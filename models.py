@@ -167,3 +167,12 @@ class Resume(BaseModel):
         for prop in schema.get("properties", {}).values():
             prop.pop("format", None)  # Remove the `format` attribute
         return schema
+
+
+class Card(BaseModel):
+    surname: Optional[str]
+    firstname: Optional[str]
+    date_of_birth:  Optional[str] = Field(None, description="Date of birth (YYYY-MM-DD).")
+    gender:  Optional[str]
+    id_number: Optional[str]
+    serial_number: Optional[str]
