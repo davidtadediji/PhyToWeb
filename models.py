@@ -4,7 +4,6 @@
 from datetime import date
 from datetime import datetime
 from typing import List, Optional
-
 from pydantic import BaseModel, Field, AnyUrl
 from typing import Dict, Any
 
@@ -176,3 +175,15 @@ class Card(BaseModel):
     gender:  Optional[str]
     id_number: Optional[str]
     serial_number: Optional[str]
+
+
+class CompanyRegistration(BaseModel):
+    company_name: Optional[str]
+    company_no: Optional[str]
+    category: Optional[str] = Field(None, description="Category of company either Domestic, Category 1 or Category 2 Global Business")
+    Title: Optional[str] = Field(None, description="Title of Person e.g Mr, Mrs or Miss")
+    id_type: Optional[str] = Field(None, description="Type of Person's ID e.g NIC, Passport No. or Company No.")
+    nic_or_passport_no_or_company_no: Optional[str] = Field(None, description="The ID number of the Person")
+    surname: Optional[str] = Field(None, description="Surname of the person")
+    firstname: Optional[str] = Field(None, description="Firstname of the person")
+    maiden_name: Optional[str] = Field(None, description="Maiden name of the person")

@@ -3,7 +3,7 @@ import requests
 import json
 
 
-def extract_resume_data(file):
+def extract_text_data(file):
     """
     Extract data from uploaded resume using the existing API endpoint
     """
@@ -15,9 +15,9 @@ def extract_resume_data(file):
         with open(file.name, 'rb') as f:
             files = {'file': f}
             form_data = {
-                'data_schema_key': 'card',
-                'case_type': 'id_card',
-                'case_sub_type': 'professional',
+                'data_schema_key': 'company_registration',
+                'case_type': 'registration',
+                'case_sub_type': 'company',
                 'user_id': 'current_user'
             }
 
@@ -48,10 +48,10 @@ def extract_resume_data(file):
 # Create Gradio interface
 def data_analyzer_interface():
     interface = gr.Interface(
-        fn=extract_resume_data,
+        fn=extract_text_data,
         inputs=gr.File(type="filepath", label="Upload Document (PDF/Image)"),
         outputs=gr.JSON(label="Extracted Form Data"),
-        title="SilPhyToWeb",
+        title="SilTextBridge",
         description="Upload a document to extract structured data"
     )
     return interface
