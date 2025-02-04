@@ -104,6 +104,7 @@ async def extract_form_data(
         case_sub_type: str = Form(...),
         user_id: str = Form(...),
         timestamp: str = Form(None),
+        use_pydantic: str = Form(None)
 ):
     """
     Extract form data from the uploaded file using AWS Textract.
@@ -118,6 +119,7 @@ async def extract_form_data(
 
     Returns:
         JSONResponse: Extracted form data or error message.
+        :param use_pydantic:
     """
     try:
         # Create a FormMetadata object with the provided data
@@ -128,6 +130,8 @@ async def extract_form_data(
             user_id=user_id,
             timestamp=timestamp,
         )
+
+        print(use_pydantic == "yes")
 
         # Construct a unique filename
         original_filename = file.filename
@@ -150,7 +154,7 @@ async def extract_form_data(
 
         result = process_form_data(
             data_schema_key=data_schema_key,
-            use_pydantic=True,
+            use_pydantic=use_pydantic == "yes",
             input_content=form_text_data,
         )
 
