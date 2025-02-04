@@ -149,7 +149,7 @@ class Certification(BaseModel):
 
 class Language(BaseModel):
     name: str = Field(..., description="Name of the language")
-    proficiency: Optional[str] = Field(..., description="Proficiency level in the language (e.g., Fluent, Intermediate, Basic)")
+    proficiency: Optional[str] = Field(..., description="Proficiency level in the language (e.g., Native, Fluent, Advanced, Intermediate, Basic)")
 
 class Resume(BaseModel):
     personal_information: PersonalInformation = Field(..., description="Personal details of the individual")

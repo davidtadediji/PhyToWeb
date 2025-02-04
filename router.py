@@ -11,7 +11,8 @@ from pydantic import BaseModel
 from llm_client import process_form_data, LLMProcessingError
 from logger import configured_logger
 from s3_facade import s3
-from text_extractor import text_extractor_enhanced
+from text_extractor import extract_text
+from text_extractor2 import  text_extractor_enhanced
 
 load_dotenv()
 
@@ -142,7 +143,7 @@ async def extract_form_data(
 
         uploaded_filename = s3.upload_pdf_form_with_caching(file_content=file_content, file_name=constructed_filename)
 
-        form_text_data = text_extractor_enhanced(uploaded_filename)
+        form_text_data = extract_text([uploaded_filename])
 
         # Debug: Log the Textract response
         print("Textract Response:", form_text_data)
