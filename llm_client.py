@@ -249,6 +249,7 @@ def process_form_data(
         configured_logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise LLMProcessingError("Processing failed", e)
 
+
 # Example usage
 if __name__ == "__main__":
     # Use Pydantic strategy

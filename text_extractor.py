@@ -85,14 +85,17 @@ def extract_text_by_type(response, block_type="LINE"):
     Returns:
         list: Extracted text blocks
     """
-    text_blocks = []
-    for block in response["Blocks"]:
-        if block["BlockType"] == block_type:
-            text_blocks.append(block["Text"])
-    return text_blocks
+    try:
+        text_blocks = []
+        for block in response["Blocks"]:
+            if block["BlockType"] == block_type:
+                text_blocks.append(block["Text"])
+        return text_blocks
+    except Exception as e:
+        raise Exception(f"Error occurred while extracting text by type {block_type} -> {str(e)}") from e
 
 
-def async_text_detection(s3_file_name: str) -> dict:
+def async_text_detection(s3_file_name: str) -> str:
     """
     Simple text extraction using AWS Textract text detection.
 
@@ -108,24 +111,62 @@ def async_text_detection(s3_file_name: str) -> dict:
 
         # Get the results once the job is complete
         response = get_async_textract_results(job_id)
+        text_output = []
 
-        # Extract different types of text
-        extracted_data = {
-            "words": extract_text_by_type(response, "WORD"),
-            "lines": extract_text_by_type(response, "LINE"),
-            "raw_response": response,  # Include raw response for additional processing if needed
-        }
+        # Log the extracted data
+        configured_logger.info(f"Extracted data from {s3_file_name}")
 
-        # Logging and printing extracted information
-        configured_logger.info(f"Extracted text from {s3_file_name}")
-        print("\nExtracted Lines:")
-        for line in extracted_data["lines"]:
-            print(line)
+        return process_response(response)
+        word_map = map_word_ids(response)
+        lines = extract_text_by_type(response, "LINE"),
+        form_fields = extract_form_fields_advanced(response, word_map),
 
-        return extracted_data
+        # Format form fields
+        text_output.append("Extracted Form Fields:")
+        for key, value in form_fields.items():
+            text_output.append(f"- {key}: {value}")
+
+        text_output.append("\nExtracted Text Lines:")
+        text_output.extend(lines)
+
+        # Combine all text
+        formatted_text = "\n".join(text_output)
+
+        # Log the extracted data
+        configured_logger.info(f"Extracted data from {s3_file_name}")
+        print(formatted_text)
+
+        return formatted_text
+
 
     except Exception as e:
         raise Exception(f"Could not extract text using Textract -> {e}")
+
+
+def process_response(response):
+    try:
+        text_output = []
+
+        word_map = map_word_ids(response)
+        lines = extract_text_by_type(response, "LINE")
+        form_fields = extract_form_fields_advanced(response, word_map)
+
+        # Format form fields
+        text_output.append("Extracted Form Fields:")
+        for key, value in form_fields.items():
+            text_output.append(f"- {key}: {value}")
+
+        text_output.append("\nExtracted Text Lines:")
+        text_output.extend(lines)
+
+        # Combine all text
+        formatted_text = "\n".join(text_output)
+
+        print(formatted_text)
+
+        return formatted_text
+    except Exception as e:
+        raise Exception(f"Error occurred while processing ocr response into form data --> {str(e)}")
 
 
 def sync_text_detection(s3_file_name: str):
@@ -135,19 +176,9 @@ def sync_text_detection(s3_file_name: str):
             Document={"S3Object": {"Bucket": bucket_name, "Name": s3_file_name}}
         )
 
-        # Check if the response contains blocks of text
-        if "Blocks" in response:
-            text_lines = []
-            # Iterate through the blocks to collect lines of text
-            for block in response["Blocks"]:
-                if block["BlockType"] == "LINE":
-                    text_lines.append(block["Text"])
+        return process_response(response)
+        extract_text_by_type(response, "LINE")
 
-            # Return the list of text lines
-            return text_lines
-
-        else:
-            raise ValueError("No text detected in the document.")
 
     except ClientError as e:
         # Handle AWS client errors such as permission or service issues
@@ -178,9 +209,156 @@ def sync_text_detection(s3_file_name: str):
         return f"An unexpected error occurred -> {str(e)}"
 
 
-# Example usage
-# if __name__ == "__main__":
-#     result = text_extractor_enhanced("case_registration_form.pdf")
+def extract_form_fields_advanced(response, word_map):
+    """
+    Advanced form field extraction from Textract response.
+
+    Args:
+        response (dict): Textract response
+        word_map (dict): Mapping of word IDs to their text
+
+    Returns:
+        dict: Extracted form fields
+    """
+    key_map = {}
+    value_map = {}
+    final_map = {}
+
+    print(word_map)
+
+    # First pass: create key and value maps
+    for block in response["Blocks"]:
+        if block["BlockType"] == "KEY_VALUE_SET":
+            if "KEY" in block.get("EntityTypes", []):
+                # Process key
+                key_text = ""
+                if "Relationships" in block:
+                    for relation in block["Relationships"]:
+                        if relation["Type"] == "CHILD":
+                            key_text = " ".join(
+                                [word_map.get(i, "") for i in relation["Ids"]]
+                            )
+
+                # Find associated value IDs
+                value_ids = []
+                for relation in block.get("Relationships", []):
+                    if relation["Type"] == "VALUE":
+                        value_ids = relation["Ids"]
+
+                if key_text:
+                    key_map[key_text] = value_ids
+
+            elif "VALUE" in block.get("EntityTypes", []):
+                # Process value
+                if "Relationships" in block:
+                    for relation in block["Relationships"]:
+                        if relation["Type"] == "CHILD":
+                            value_text = " ".join(
+                                [word_map.get(i, "") for i in relation["Ids"]]
+                            )
+                            value_map[block["Id"]] = value_text
+
+    # Second pass: combine keys and values
+    for key, value_ids in key_map.items():
+        value_text = " ".join([value_map.get(vid, "N/A") for vid in value_ids])
+        final_map[key] = value_text.strip()
+
+    return final_map
+
+
+def map_word_ids(response):
+    """
+    Create a mapping of word and selection IDs to their text or status.
+
+    Args:
+        response (dict): Textract response
+
+    Returns:
+        dict: Mapping of block IDs to their text or selection status
+    """
+    word_map = {}
+    for block in response["Blocks"]:
+        if block["BlockType"] == "WORD":
+            word_map[block["Id"]] = block["Text"]
+        if block["BlockType"] == "SELECTION_ELEMENT":
+            word_map[block["Id"]] = block["SelectionStatus"]
+
+    print("Word Map: ", word_map)
+    return word_map
+
+
+def extract_form_fields_advanced(response, word_map):
+    """
+    Advanced form field extraction from Textract response.
+
+    Args:
+        response (dict): Textract response
+        word_map (dict): Mapping of word IDs to their text
+
+    Returns:
+        dict: Extracted form fields
+    """
+    key_map = {}
+    value_map = {}
+    final_map = {}
+
+    # First pass: create key and value maps
+    for block in response["Blocks"]:
+        if block["BlockType"] == "KEY_VALUE_SET":
+            if "KEY" in block.get("EntityTypes", []):
+                # Process key
+                key_text = ""
+                if "Relationships" in block:
+                    for relation in block["Relationships"]:
+                        if relation["Type"] == "CHILD":
+                            key_text = " ".join(
+                                [word_map.get(i, "") for i in relation["Ids"]]
+                            )
+
+                # Find associated value IDs
+                value_ids = []
+                for relation in block.get("Relationships", []):
+                    if relation["Type"] == "VALUE":
+                        value_ids = relation["Ids"]
+
+                if key_text:
+                    key_map[key_text] = value_ids
+
+            elif "VALUE" in block.get("EntityTypes", []):
+                # Process value
+                if "Relationships" in block:
+                    for relation in block["Relationships"]:
+                        if relation["Type"] == "CHILD":
+                            value_text = " ".join(
+                                [word_map.get(i, "") for i in relation["Ids"]]
+                            )
+                            value_map[block["Id"]] = value_text
+
+    # Second pass: combine keys and values
+    for key, value_ids in key_map.items():
+        value_text = " ".join([value_map.get(vid, "N/A") for vid in value_ids])
+        final_map[key] = value_text.strip()
+
+    return final_map
+
+
+def map_word_ids(response):
+    """
+    Create a mapping of word and selection IDs to their text or status.
+
+    Args:
+        response (dict): Textract response
+
+    Returns:
+        dict: Mapping of block IDs to their text or selection status
+    """
+    word_map = {}
+    for block in response["Blocks"]:
+        if block["BlockType"] == "WORD":
+            word_map[block["Id"]] = block["Text"]
+        if block["BlockType"] == "SELECTION_ELEMENT":
+            word_map[block["Id"]] = block["SelectionStatus"]
+    return word_map
 
 
 def extract_text(file_names):
@@ -201,19 +379,15 @@ def extract_text(file_names):
                 # Handle PDF files with synchronous Textract API
                 configured_logger.info(f"Processing PDF: {file_name}")
                 result = async_text_detection(file_name)
-                response += "".join(text_line + "\n" for text_line in result["lines"])
                 configured_logger.info(
-                    f"Text detection completed for {file_name}. Response: {response}"
+                    f"Text detection completed for {file_name}. Response: {result}"
                 )
             else:
                 # Handle images with asynchronous Textract API
                 configured_logger.info(f"Processing image: {file_name}")
-                # response += sync_text_detection(file_name)
-                response += "".join(
-                    text_line + "\n" for text_line in sync_text_detection(file_name)
-                )
+                result = sync_text_detection(file_name)
                 configured_logger.info(
-                    f"Text detection completed for {file_name}. Response: {response}"
+                    f"Text detection completed for {file_name}. Response: {result}"
                 )
 
         except Exception as e:
